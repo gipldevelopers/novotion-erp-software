@@ -145,10 +145,51 @@ const stats = [
 ];
 
 export default function CustomersPage() {
+  const [customersList, setCustomersList] = useState(customers);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState('all');
 
-  const filteredCustomers = customers.filter((customer) => {
+  // New Customer Form State
+  const [newCustomer, setNewCustomer] = useState({
+    name: '',
+    contact: '',
+    email: '',
+    phone: '',
+    type: 'Client',
+    location: '',
+    notes: ''
+  });
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const handleAddCustomer = () => {
+    const customer = {
+      id: customersList.length + 1,
+      name: newCustomer.name || 'New Company',
+      contact: newCustomer.contact || 'New Contact',
+      email: newCustomer.email || 'email@example.com',
+      phone: newCustomer.phone || '',
+      type: newCustomer.type || 'Client',
+      status: 'Active',
+      revenue: '$0',
+      deals: 0,
+      lastContact: new Date().toISOString().split('T')[0],
+      location: newCustomer.location || 'Unknown',
+    };
+
+    setCustomersList([...customersList, customer]);
+    setIsDialogOpen(false);
+    setNewCustomer({
+      name: '',
+      contact: '',
+      email: '',
+      phone: '',
+      type: 'Client',
+      location: '',
+      notes: ''
+    });
+  };
+
+  const filteredCustomers = customersList.filter((customer) => {
     const matchesSearch =
       customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       customer.contact.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -165,14 +206,14 @@ export default function CustomersPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900  :text-white mb-2">
+          <h1 className="text-3xl font-bold text-slate-900  dark:text-white mb-2">
             Customer Management
           </h1>
           <p className="text-slate-600  :text-slate-400">
             Manage your customer relationships and track interactions
           </p>
         </div>
-        <Dialog>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white shadow-lg shadow-blue-500/30">
               <Plus className="w-4 h-4 mr-2" />
@@ -189,36 +230,62 @@ export default function CustomersPage() {
             <div className="grid grid-cols-2 gap-4 py-4">
               <div className="space-y-2">
                 <Label htmlFor="company">Company Name</Label>
-                <Input id="company" placeholder="Acme Corporation" />
+                <Input
+                  id="company"
+                  placeholder="Acme Corporation"
+                  value={newCustomer.name}
+                  onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="contact">Contact Person</Label>
-                <Input id="contact" placeholder="John Doe" />
+                <Input
+                  id="contact"
+                  placeholder="John Doe"
+                  value={newCustomer.contact}
+                  onChange={(e) => setNewCustomer({ ...newCustomer, contact: e.target.value })}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="john@acme.com" />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="john@acme.com"
+                  value={newCustomer.email}
+                  onChange={(e) => setNewCustomer({ ...newCustomer, email: e.target.value })}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone</Label>
-                <Input id="phone" placeholder="+1 (555) 123-4567" />
+                <Input
+                  id="phone"
+                  placeholder="+1 (555) 123-4567"
+                  value={newCustomer.phone}
+                  onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="type">Customer Type</Label>
-                <Select>
+                <Select value={newCustomer.type} onValueChange={(val) => setNewCustomer({ ...newCustomer, type: val })}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="lead">Lead</SelectItem>
-                    <SelectItem value="client">Client</SelectItem>
-                    <SelectItem value="vendor">Vendor</SelectItem>
+                    <SelectItem value="Lead">Lead</SelectItem>
+                    <SelectItem value="Client">Client</SelectItem>
+                    <SelectItem value="Vendor">Vendor</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="location">Location</Label>
-                <Input id="location" placeholder="New York, USA" />
+                <Input
+                  id="location"
+                  placeholder="New York, USA"
+                  value={newCustomer.location}
+                  onChange={(e) => setNewCustomer({ ...newCustomer, location: e.target.value })}
+                />
               </div>
               <div className="col-span-2 space-y-2">
                 <Label htmlFor="notes">Notes</Label>
@@ -226,12 +293,17 @@ export default function CustomersPage() {
                   id="notes"
                   placeholder="Additional information about the customer..."
                   rows={3}
+                  value={newCustomer.notes}
+                  onChange={(e) => setNewCustomer({ ...newCustomer, notes: e.target.value })}
                 />
               </div>
             </div>
             <div className="flex justify-end space-x-2">
-              <Button variant="outline">Cancel</Button>
-              <Button className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white">
+              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+              <Button
+                className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white"
+                onClick={handleAddCustomer}
+              >
                 Create Customer
               </Button>
             </div>
@@ -252,7 +324,7 @@ export default function CustomersPage() {
                   <p className="text-sm text-slate-600  :text-slate-400 mb-1">
                     {stat.label}
                   </p>
-                  <p className="text-3xl font-bold text-slate-900  :text-white">
+                  <p className="text-3xl font-bold text-slate-900  dark:text-white">
                     {stat.value}
                   </p>
                 </div>
@@ -357,8 +429,8 @@ export default function CustomersPage() {
                           customer.type === 'Client'
                             ? 'bg-blue-50  :bg-blue-950 text-blue-600  :text-blue-400 border-blue-200  :border-blue-800'
                             : customer.type === 'Lead'
-                            ? 'bg-purple-50  :bg-purple-950 text-purple-600  :text-purple-400 border-purple-200  :border-purple-800'
-                            : 'bg-orange-50  :bg-orange-950 text-orange-600  :text-orange-400 border-orange-200  :border-orange-800'
+                              ? 'bg-purple-50  :bg-purple-950 text-purple-600  :text-purple-400 border-purple-200  :border-purple-800'
+                              : 'bg-orange-50  :bg-orange-950 text-orange-600  :text-orange-400 border-orange-200  :border-orange-800'
                         }
                       >
                         {customer.type}
@@ -387,7 +459,7 @@ export default function CustomersPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center text-sm text-slate-600  :text-slate-400">
+                      <div className="flex items-center text-sm text-slate-600  dark:text-slate-400">
                         <Calendar className="w-4 h-4 mr-1" />
                         {new Date(customer.lastContact).toLocaleDateString()}
                       </div>

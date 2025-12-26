@@ -18,7 +18,15 @@ import {
   MoreVertical,
   FileText,
   Video,
+  Link as LinkIcon,
+  Clock as ClockIcon,
+  Trash2,
+  Edit,
 } from 'lucide-react';
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import interactionPlugin from '@fullcalendar/interaction';
+import timeGridPlugin from '@fullcalendar/timegrid';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -49,7 +57,7 @@ import {
   DropdownMenuTrigger,
 } from '../../components/ui/dropdown-menu';
 
-const activities = [
+const initialActivities = [
   {
     id: 1,
     type: 'email',
@@ -198,8 +206,135 @@ const priorityConfig = {
 export default function CommunicationsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState('all');
+  const [timeFilter, setTimeFilter] = useState('all');
+  const [taskAssigneeFilter, setTaskAssigneeFilter] = useState('all');
+  const [calendarAssigneeFilter, setCalendarAssigneeFilter] = useState('all');
+  const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
+  const [isDayDetailsOpen, setIsDayDetailsOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [editingEventId, setEditingEventId] = useState<number | null>(null);
+  const [newEvent, setNewEvent] = useState({
+    title: '',
+    date: '',
+    time: '',
+    type: 'meeting',
+    assignee: '',
+    meetLink: '',
+    phone: '',
+  });
+  const [activitiesState, setActivitiesState] = useState(initialActivities);
 
-  const filteredActivities = activities.filter((activity) => {
+  const handleDateClick = (arg: any) => {
+    setSelectedDate(arg.dateStr);
+    setIsDayDetailsOpen(true);
+  };
+
+  const handleAddEventFromDayDetails = () => {
+    setNewEvent({
+      title: '',
+      date: selectedDate || '',
+      time: '',
+      type: 'meeting',
+      assignee: '',
+      meetLink: '',
+      phone: '',
+    });
+    setEditingEventId(null);
+    setIsDayDetailsOpen(false);
+    setIsEventDialogOpen(true);
+  };
+
+  const handleEditEvent = (activity: any) => {
+    setNewEvent({
+      title: activity.subject,
+      date: activity.date.split('T')[0],
+      time: new Date(activity.date).toTimeString().slice(0, 5),
+      type: activity.type,
+      assignee: activity.assignedTo,
+      meetLink: activity.notes.startsWith('Link: ') ? activity.notes.replace('Link: ', '') : '',
+      phone: activity.notes.startsWith('Phone: ') ? activity.notes.replace('Phone: ', '') : '',
+    });
+    setEditingEventId(activity.id);
+    setIsDayDetailsOpen(false);
+    setIsEventDialogOpen(true);
+  };
+
+  const handleDeleteEvent = (id: number) => {
+    setActivitiesState(activitiesState.filter(a => a.id !== id));
+  };
+
+  const handleSaveEvent = () => {
+    if (!newEvent.title || !newEvent.date) return;
+
+    const dateTime = newEvent.time ? `${newEvent.date}T${newEvent.time}:00` : `${newEvent.date}T00:00:00`;
+
+    if (editingEventId) {
+      // Update existing event
+      setActivitiesState(activitiesState.map(a =>
+        a.id === editingEventId ? {
+          ...a,
+          type: newEvent.type,
+          subject: newEvent.title,
+          assignedTo: newEvent.assignee || 'Unassigned',
+          date: dateTime,
+          notes: newEvent.type === 'meeting' ? `Link: ${newEvent.meetLink}` : `Phone: ${newEvent.phone}`,
+        } : a
+      ));
+      setEditingEventId(null);
+    } else {
+      // Create new event
+      const newActivity = {
+        id: activitiesState.length + 1,
+        type: newEvent.type,
+        subject: newEvent.title,
+        customer: 'New Customer',
+        company: 'New Company',
+        status: 'scheduled',
+        priority: 'medium',
+        assignedTo: newEvent.assignee || 'Unassigned',
+        date: dateTime,
+        notes: newEvent.type === 'meeting' ? `Link: ${newEvent.meetLink}` : `Phone: ${newEvent.phone}`,
+      };
+      setActivitiesState([...activitiesState, newActivity]);
+    }
+
+    setIsEventDialogOpen(false);
+    // Re-open day details if we were on a specific day
+    if (selectedDate) {
+      setIsDayDetailsOpen(true);
+    }
+
+    setNewEvent({
+      title: '',
+      date: '',
+      time: '',
+      type: 'meeting',
+      assignee: '',
+      meetLink: '',
+      phone: '',
+    });
+  };
+
+  const filterByTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    switch (timeFilter) {
+      case 'today':
+        return date >= startOfDay;
+      case 'week':
+        return date >= startOfWeek;
+      case 'month':
+        return date >= startOfMonth;
+      default:
+        return true;
+    }
+  };
+
+  const filteredActivities = activitiesState.filter((activity) => {
     const matchesSearch =
       activity.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
       activity.customer.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -208,15 +343,29 @@ export default function CommunicationsPage() {
     const matchesType =
       selectedType === 'all' || activity.type === selectedType;
 
-    return matchesSearch && matchesType;
+    const matchesTime = filterByTime(activity.date);
+
+    return matchesSearch && matchesType && matchesTime;
   });
+
+  const filteredTasks = tasks.filter((task) => {
+    return taskAssigneeFilter === 'all' || task.assignedTo === taskAssigneeFilter;
+  });
+
+  const calendarEvents = activitiesState.map(a => ({
+    title: a.subject,
+    date: a.date,
+    backgroundColor: a.type === 'meeting' ? '#8b5cf6' : a.type === 'call' ? '#10b981' : '#3b82f6',
+    borderColor: a.type === 'meeting' ? '#7c3aed' : a.type === 'call' ? '#059669' : '#2563eb',
+    extendedProps: { type: a.type, assignee: a.assignedTo }
+  })).filter(event => calendarAssigneeFilter === 'all' || event.extendedProps.assignee === calendarAssigneeFilter);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900   :text-white mb-2">
+          <h1 className="text-3xl font-bold text-slate-900   dark:text-white mb-2">
             Communications
           </h1>
           <p className="text-slate-600   :text-slate-400">
@@ -331,7 +480,7 @@ export default function CommunicationsPage() {
                   <p className="text-sm text-slate-600   :text-slate-400 mb-1">
                     {stat.label}
                   </p>
-                  <p className="text-3xl font-bold text-slate-900   :text-white">
+                  <p className="text-3xl font-bold text-slate-900   dark:text-white">
                     {stat.value}
                   </p>
                 </div>
@@ -356,6 +505,10 @@ export default function CommunicationsPage() {
           <TabsTrigger value="tasks" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-cyan-500 data-[state=active]:text-white">
             <CheckCircle className="w-4 h-4 mr-2" />
             Tasks
+          </TabsTrigger>
+          <TabsTrigger value="calendar" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-cyan-500 data-[state=active]:text-white">
+            <Calendar className="w-4 h-4 mr-2" />
+            Calendar
           </TabsTrigger>
         </TabsList>
 
@@ -387,6 +540,18 @@ export default function CommunicationsPage() {
                       <SelectItem value="task">Task</SelectItem>
                     </SelectContent>
                   </Select>
+                  <Select value={timeFilter} onValueChange={setTimeFilter}>
+                    <SelectTrigger className="w-full sm:w-40">
+                      <Calendar className="w-4 h-4 mr-2" />
+                      <SelectValue placeholder="Time" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Time</SelectItem>
+                      <SelectItem value="today">Today</SelectItem>
+                      <SelectItem value="week">This Week</SelectItem>
+                      <SelectItem value="month">This Month</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </CardHeader>
@@ -405,15 +570,14 @@ export default function CommunicationsPage() {
                       <CardContent className="p-6">
                         <div className="flex items-start space-x-4">
                           <div
-                            className={`w-12 h-12 rounded-lg ${
-                              activity.type === 'email'
-                                ? 'bg-gradient-to-br from-blue-500 to-cyan-500'
-                                : activity.type === 'call'
+                            className={`w-12 h-12 rounded-lg ${activity.type === 'email'
+                              ? 'bg-gradient-to-br from-blue-500 to-cyan-500'
+                              : activity.type === 'call'
                                 ? 'bg-gradient-to-br from-green-500 to-emerald-500'
                                 : activity.type === 'meeting'
-                                ? 'bg-gradient-to-br from-purple-500 to-pink-500'
-                                : 'bg-gradient-to-br from-orange-500 to-red-500'
-                            } flex items-center justify-center flex-shrink-0`}
+                                  ? 'bg-gradient-to-br from-purple-500 to-pink-500'
+                                  : 'bg-gradient-to-br from-orange-500 to-red-500'
+                              } flex items-center justify-center flex-shrink-0`}
                           >
                             <Icon className="w-6 h-6 text-white" />
                           </div>
@@ -421,10 +585,10 @@ export default function CommunicationsPage() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between mb-2">
                               <div className="flex-1">
-                                <h3 className="font-semibold text-slate-900   :text-white mb-1">
+                                <h3 className="font-semibold text-slate-900   dark:text-white mb-1">
                                   {activity.subject}
                                 </h3>
-                                <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600   :text-slate-400 mb-2">
+                                <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600   dark:text-slate-400 mb-2">
                                   <span className="flex items-center">
                                     <Users className="w-4 h-4 mr-1" />
                                     {activity.customer} - {activity.company}
@@ -434,7 +598,7 @@ export default function CommunicationsPage() {
                                     {new Date(activity.date).toLocaleString()}
                                   </span>
                                 </div>
-                                <p className="text-sm text-slate-600   :text-slate-400">
+                                <p className="text-sm text-slate-600   dark:text-slate-400">
                                   {activity.notes}
                                 </p>
                               </div>
@@ -468,7 +632,7 @@ export default function CommunicationsPage() {
                               >
                                 {activity.priority} priority
                               </Badge>
-                              <Badge variant="outline" className="bg-slate-50   :bg-slate-800 text-slate-600   :text-slate-400 border-slate-200   :border-slate-700">
+                              <Badge variant="outline" className="bg-slate-50   dark:bg-slate-800 text-slate-600   dark:text-slate-400 border-slate-200   dark:border-slate-700">
                                 Assigned to {activity.assignedTo}
                               </Badge>
                             </div>
@@ -484,45 +648,59 @@ export default function CommunicationsPage() {
         </TabsContent>
 
         <TabsContent value="tasks" className="space-y-6">
-          <Card className="border-0 shadow-lg bg-white   :bg-slate-800">
+          <Card className="border-0 shadow-lg bg-white   dark:bg-slate-800">
             <CardHeader>
-              <CardTitle className="text-slate-900   :text-white">Team Tasks</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-slate-900 dark:text-white">Team Tasks</CardTitle>
+                <Select value={taskAssigneeFilter} onValueChange={setTaskAssigneeFilter}>
+                  <SelectTrigger className="w-[180px]">
+                    <Users className="w-4 h-4 mr-2" />
+                    <SelectValue placeholder="Filter by Assignee" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Assignees</SelectItem>
+                    <SelectItem value="John Doe">John Doe</SelectItem>
+                    <SelectItem value="Jane Smith">Jane Smith</SelectItem>
+                    <SelectItem value="Mike Johnson">Mike Johnson</SelectItem>
+                    <SelectItem value="Sarah Davis">Sarah Davis</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {tasks.map((task) => {
+                {filteredTasks.map((task) => {
                   const statusStyle = statusConfig[task.status as keyof typeof statusConfig];
                   const priorityStyle = priorityConfig[task.priority as keyof typeof priorityConfig];
 
                   return (
                     <div
                       key={task.id}
-                      className="flex items-center justify-between p-4 rounded-lg border border-slate-200   :border-slate-700 hover:bg-slate-50   :hover:bg-slate-700 transition-colors"
+                      className="flex items-center justify-between p-4 rounded-lg border border-slate-200   dark:border-slate-700 hover:bg-slate-50   dark:hover:bg-slate-700 transition-colors"
                     >
                       <div className="flex items-center space-x-4 flex-1">
                         <div
-                          className={`w-10 h-10 rounded-lg ${
-                            task.status === 'completed'
-                              ? 'bg-green-100   :bg-green-950'
-                              : task.status === 'in-progress'
-                              ? 'bg-blue-100   :bg-blue-950'
-                              : 'bg-orange-100   :bg-orange-950'
-                          } flex items-center justify-center`}
+                          className={`w-10 h-10 rounded-lg ${task.status === 'completed'
+                            ? 'bg-green-100   dark:bg-green-950'
+                            : task.status === 'in-progress'
+                              ? 'bg-blue-100   dark:bg-blue-950'
+                              : 'bg-orange-100   dark:bg-orange-950'
+                            } flex items-center justify-center`}
                         >
                           {task.status === 'completed' ? (
-                            <CheckCircle className="w-5 h-5 text-green-600   :text-green-400" />
+                            <CheckCircle className="w-5 h-5 text-green-600   dark:text-green-400" />
                           ) : task.status === 'in-progress' ? (
-                            <Clock className="w-5 h-5 text-blue-600   :text-blue-400" />
+                            <Clock className="w-5 h-5 text-blue-600   dark:text-blue-400" />
                           ) : (
-                            <AlertCircle className="w-5 h-5 text-orange-600   :text-orange-400" />
+                            <AlertCircle className="w-5 h-5 text-orange-600   dark:text-orange-400" />
                           )}
                         </div>
 
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-slate-900   :text-white mb-1">
+                          <h4 className="font-medium text-slate-900   dark:text-white mb-1">
                             {task.title}
                           </h4>
-                          <div className="flex items-center space-x-3 text-xs text-slate-500   :text-slate-400">
+                          <div className="flex items-center space-x-3 text-xs text-slate-500   dark:text-slate-400">
                             <span className="flex items-center">
                               <Users className="w-3 h-3 mr-1" />
                               {task.assignedTo}
@@ -570,7 +748,201 @@ export default function CommunicationsPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="calendar" className="space-y-6">
+          <Card className="border-0 shadow-lg bg-white dark:bg-slate-800">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-slate-900 dark:text-white">Calendar</CardTitle>
+                <div className="flex items-center space-x-4">
+                  <Select value={calendarAssigneeFilter} onValueChange={setCalendarAssigneeFilter}>
+                    <SelectTrigger className="w-[180px]">
+                      <Users className="w-4 h-4 mr-2" />
+                      <SelectValue placeholder="Filter by Assignee" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Assignees</SelectItem>
+                      <SelectItem value="John Doe">John Doe</SelectItem>
+                      <SelectItem value="Jane Smith">Jane Smith</SelectItem>
+                      <SelectItem value="Mike Johnson">Mike Johnson</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  {/* Day Details Dialog */}
+                  <Dialog open={isDayDetailsOpen} onOpenChange={setIsDayDetailsOpen}>
+                    <DialogContent className="max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>
+                          {selectedDate ? new Date(selectedDate).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : 'Day Details'}
+                        </DialogTitle>
+                        <DialogDescription>
+                          Scheduled activities for this day
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="py-4 space-y-4">
+                        {activitiesState.filter(a => a.date.startsWith(selectedDate || '')).length === 0 ? (
+                          <p className="text-center text-slate-500 py-4">No activities scheduled for this day.</p>
+                        ) : (
+                          <div className="space-y-3">
+                            {activitiesState.filter(a => a.date.startsWith(selectedDate || '')).map(activity => (
+                              <div key={activity.id} className="flex items-center justify-between p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
+                                <div>
+                                  <h4 className="font-medium text-slate-900 dark:text-white">{activity.subject}</h4>
+                                  <div className="flex items-center text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                    <ClockIcon className="w-3 h-3 mr-1" />
+                                    {new Date(activity.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    <span className="mx-2">•</span>
+                                    {activity.type}
+                                  </div>
+                                </div>
+                                <div className="flex items-center space-x-1">
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditEvent(activity)}>
+                                    <Edit className="w-4 h-4 text-slate-500 hover:text-blue-500" />
+                                  </Button>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDeleteEvent(activity.id)}>
+                                    <Trash2 className="w-4 h-4 text-slate-500 hover:text-red-500" />
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        <Button className="w-full mt-4" onClick={handleAddEventFromDayDetails}>
+                          <Plus className="w-4 h-4 mr-2" />
+                          Add New Activity
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+
+                  <Dialog open={isEventDialogOpen} onOpenChange={setIsEventDialogOpen}>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>{editingEventId ? 'Edit Event' : 'Add New Event'}</DialogTitle>
+                        <DialogDescription>Schedule a call or meeting</DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                          <Label>Event Title</Label>
+                          <Input
+                            placeholder="Meeting with..."
+                            value={newEvent.title}
+                            onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label>Date</Label>
+                            <Input
+                              type="date"
+                              value={newEvent.date}
+                              onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Time</Label>
+                            <Input
+                              type="time"
+                              value={newEvent.time}
+                              onChange={(e) => setNewEvent({ ...newEvent, time: e.target.value })}
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label>Type</Label>
+                            <Select
+                              value={newEvent.type}
+                              onValueChange={(v) => setNewEvent({ ...newEvent, type: v })}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="meeting">Meeting</SelectItem>
+                                <SelectItem value="call">Call</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Assignee</Label>
+                            <Select
+                              value={newEvent.assignee}
+                              onValueChange={(v) => setNewEvent({ ...newEvent, assignee: v })}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select assignee" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="John Doe">John Doe</SelectItem>
+                                <SelectItem value="Jane Smith">Jane Smith</SelectItem>
+                                <SelectItem value="Mike Johnson">Mike Johnson</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        {newEvent.type === 'meeting' && (
+                          <div className="space-y-2">
+                            <Label>Google Meet Link</Label>
+                            <div className="relative">
+                              <Video className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                              <Input
+                                className="pl-10"
+                                placeholder="meet.google.com/..."
+                                value={newEvent.meetLink}
+                                onChange={(e) => setNewEvent({ ...newEvent, meetLink: e.target.value })}
+                              />
+                            </div>
+                          </div>
+                        )}
+                        {newEvent.type === 'call' && (
+                          <div className="space-y-2">
+                            <Label>Phone Number</Label>
+                            <div className="relative">
+                              <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                              <Input
+                                className="pl-10"
+                                placeholder="+1 (555) 000-0000"
+                                value={newEvent.phone}
+                                onChange={(e) => setNewEvent({ ...newEvent, phone: e.target.value })}
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex justify-end space-x-2">
+                        <Button variant="outline" onClick={() => setIsEventDialogOpen(false)}>Cancel</Button>
+                        <Button onClick={handleSaveEvent}>{editingEventId ? 'Update Event' : 'Save Event'}</Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="calendar-wrapper">
+                <FullCalendar
+                  plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+                  initialView="dayGridMonth"
+                  headerToolbar={{
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                  }}
+                  events={calendarEvents}
+                  dateClick={handleDateClick}
+                  height="auto"
+                  editable={true}
+                  selectable={true}
+                  selectMirror={true}
+                  dayMaxEvents={true}
+                  eventClassNames="cursor-pointer"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
-    </div>
+    </div >
   );
 }

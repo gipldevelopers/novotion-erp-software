@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 :root {
   --background: 0 0% 100%;
@@ -26,6 +27,13 @@
   --fun-blue: 217 91% 60%;
   --fun-purple: 269 97% 66%;
   --fun-pink: 330 81% 60%;
+
+  /* Chart Variables */
+  --tooltip-bg: 255 255 255;
+  --tooltip-border: 226 232 240;
+  --tooltip-text: 15 23 42;
+  --chart-grid: 226 232 240;
+  --chart-text: 100 116 139;
 }
 
 .dark {
@@ -51,36 +59,69 @@
   --fun-blue: 217 91% 70%;
   --fun-purple: 269 97% 76%;
   --fun-pink: 330 81% 70%;
+
+  /* Chart Variables */
+  --tooltip-bg: 15 23 42;
+  --tooltip-border: 30 41 59;
+  --tooltip-text: 248 250 252;
+  --chart-grid: 30 41 59;
+  --chart-text: 148 163 184;
 }
 
 /* Smooth animations */
 * {
-  transition: background-color 0.3s ease, 
-              border-color 0.3s ease, 
-              color 0.3s ease,
-              transform 0.3s ease,
-              opacity 0.3s ease;
+  transition: background-color 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease,
+    transform 0.3s ease,
+    opacity 0.3s ease;
 }
 
 /* Bounce animation for fun interactions */
 @keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-5px);
+  }
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 @keyframes shimmer {
-  0% { background-position: -200% center; }
-  100% { background-position: 200% center; }
+  0% {
+    background-position: -200% center;
+  }
+
+  100% {
+    background-position: 200% center;
+  }
 }
 
 @keyframes pulse-glow {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
 }
 
 .bounce-hover:hover {
@@ -109,21 +150,19 @@
 }
 
 .gradient-fun {
-  background: linear-gradient(135deg, 
-    hsl(var(--fun-blue)), 
-    hsl(var(--fun-purple)), 
-    hsl(var(--fun-pink))
-  );
+  background: linear-gradient(135deg,
+      hsl(var(--fun-blue)),
+      hsl(var(--fun-purple)),
+      hsl(var(--fun-pink)));
   background-size: 200% 200%;
   animation: shimmer 3s ease infinite;
 }
 
 /* Fun buttons */
 .btn-fun {
-  background: linear-gradient(135deg, 
-    hsl(var(--fun-blue)), 
-    hsl(var(--fun-purple))
-  );
+  background: linear-gradient(135deg,
+      hsl(var(--fun-blue)),
+      hsl(var(--fun-purple)));
   color: white;
   border: none;
   padding: 12px 24px;
@@ -156,18 +195,16 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, 
-    hsl(var(--fun-blue)), 
-    hsl(var(--fun-purple))
-  );
+  background: linear-gradient(135deg,
+      hsl(var(--fun-blue)),
+      hsl(var(--fun-purple)));
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, 
-    hsl(var(--fun-purple)), 
-    hsl(var(--fun-pink))
-  );
+  background: linear-gradient(135deg,
+      hsl(var(--fun-purple)),
+      hsl(var(--fun-pink)));
 }
 
 /* Card hover effects */

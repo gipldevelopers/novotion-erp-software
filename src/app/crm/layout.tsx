@@ -25,6 +25,7 @@ import {
   DropdownMenuTrigger,
 } from '../components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '../components/ui/avatar';
+import { ThemeToggle } from '../components/ThemeToggle';
 
 const navigation = [
   { name: 'Dashboard', href: '/crm', icon: LayoutDashboard },
@@ -39,7 +40,7 @@ export default function CRMLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-950 dark:to-slate-900">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div
@@ -50,13 +51,12 @@ export default function CRMLayout({ children }: { children: React.ReactNode }) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-50 h-full w-64 bg-white border-r border-slate-200 transition-transform duration-300 ease-in-out ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } lg:translate-x-0 shadow-xl`}
+        className={`fixed top-0 left-0 z-50 h-full w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          } lg:translate-x-0 shadow-xl`}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="flex items-center justify-between p-6 border-b border-slate-200">
+          <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-800">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
                 <LayoutDashboard className="w-6 h-6 text-white" />
@@ -65,7 +65,7 @@ export default function CRMLayout({ children }: { children: React.ReactNode }) {
                 <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
                   CRM Pro
                 </h1>
-                <p className="text-xs text-slate-500">Customer Management</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Customer Management</p>
               </div>
             </div>
             <button
@@ -84,11 +84,10 @@ export default function CRMLayout({ children }: { children: React.ReactNode }) {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                    isActive
-                      ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-500/30'
-                      : 'text-slate-700 hover:bg-slate-100'
-                  }`}
+                  className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${isActive
+                    ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-500/30'
+                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
                 >
                   <item.icon className="w-5 h-5" />
                   <span className="font-medium">{item.name}</span>
@@ -98,18 +97,18 @@ export default function CRMLayout({ children }: { children: React.ReactNode }) {
           </nav>
 
           {/* User Profile */}
-          <div className="p-4 border-t border-slate-200">
-            <div className="flex items-center space-x-3 p-3 rounded-lg bg-slate-50">
+          <div className="p-4 border-t border-slate-200 dark:border-slate-800">
+            <div className="flex items-center space-x-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800">
               <Avatar>
                 <AvatarFallback className="bg-gradient-to-br from-blue-500 to-cyan-500 text-white">
                   JD
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-slate-900 truncate">
+                <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
                   John Doe
                 </p>
-                <p className="text-xs text-slate-500 truncate">
+                <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
                   Admin
                 </p>
               </div>
@@ -122,7 +121,7 @@ export default function CRMLayout({ children }: { children: React.ReactNode }) {
       {/* Main Content */}
       <div className="lg:pl-64">
         {/* Header */}
-        <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-lg border-b border-slate-200 shadow-sm">
+        <header className="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-b border-slate-200 dark:border-slate-800 shadow-sm">
           <div className="flex items-center justify-between px-6 py-4">
             <div className="flex items-center space-x-4 flex-1">
               <button
@@ -145,15 +144,17 @@ export default function CRMLayout({ children }: { children: React.ReactNode }) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="relative hover:bg-slate-100"
+                className="relative hover:bg-slate-100 dark:hover:bg-slate-800"
               >
                 <Bell className="w-5 h-5" />
                 <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
               </Button>
 
+              <ThemeToggle />
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex items-center space-x-2">
+                  <Button variant="ghost" className="flex items-center space-x-2 hover:bg-slate-100 dark:hover:bg-slate-800">
                     <Avatar className="w-8 h-8">
                       <AvatarFallback className="bg-gradient-to-br from-blue-500 to-cyan-500 text-white text-xs">
                         JD

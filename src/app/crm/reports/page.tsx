@@ -42,15 +42,41 @@ import {
 } from 'recharts';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 
-const customerGrowthData = [
-  { month: 'Jan', customers: 1420, newCustomers: 145, churnedCustomers: 23 },
-  { month: 'Feb', customers: 1542, newCustomers: 167, churnedCustomers: 45 },
-  { month: 'Mar', customers: 1689, newCustomers: 189, churnedCustomers: 42 },
-  { month: 'Apr', customers: 1856, newCustomers: 201, churnedCustomers: 34 },
-  { month: 'May', customers: 2043, newCustomers: 234, churnedCustomers: 47 },
-  { month: 'Jun', customers: 2267, newCustomers: 278, churnedCustomers: 54 },
-  { month: 'Jul', customers: 2543, newCustomers: 312, churnedCustomers: 36 },
-];
+const customerGrowthData = {
+  today: [
+    { time: '9 AM', customers: 1420, newCustomers: 5 },
+    { time: '10 AM', customers: 1425, newCustomers: 8 },
+    { time: '11 AM', customers: 1433, newCustomers: 12 },
+    { time: '12 PM', customers: 1445, newCustomers: 15 },
+    { time: '1 PM', customers: 1450, newCustomers: 10 },
+    { time: '2 PM', customers: 1458, newCustomers: 14 },
+    { time: '3 PM', customers: 1465, newCustomers: 9 },
+  ],
+  week: [
+    { day: 'Mon', customers: 1420, newCustomers: 45 },
+    { day: 'Tue', customers: 1465, newCustomers: 52 },
+    { day: 'Wed', customers: 1517, newCustomers: 48 },
+    { day: 'Thu', customers: 1565, newCustomers: 61 },
+    { day: 'Fri', customers: 1626, newCustomers: 55 },
+    { day: 'Sat', customers: 1681, newCustomers: 32 },
+    { day: 'Sun', customers: 1713, newCustomers: 28 },
+  ],
+  month: [
+    { week: 'Week 1', customers: 1420, newCustomers: 145 },
+    { week: 'Week 2', customers: 1565, newCustomers: 167 },
+    { week: 'Week 3', customers: 1732, newCustomers: 189 },
+    { week: 'Week 4', customers: 1921, newCustomers: 201 },
+  ],
+  year: [
+    { month: 'Jan', customers: 1420, newCustomers: 145 },
+    { month: 'Feb', customers: 1542, newCustomers: 167 },
+    { month: 'Mar', customers: 1689, newCustomers: 189 },
+    { month: 'Apr', customers: 1856, newCustomers: 201 },
+    { month: 'May', customers: 2043, newCustomers: 234 },
+    { month: 'Jun', customers: 2267, newCustomers: 278 },
+    { month: 'Jul', customers: 2543, newCustomers: 312 },
+  ],
+};
 
 const salesFunnelData = [
   { stage: 'Leads', value: 2500, conversion: 100 },
@@ -68,11 +94,12 @@ const revenueBySegment = [
   { segment: 'Startup', revenue: 100000, percentage: 10 },
 ];
 
-const followUpPerformance = [
-  { team: 'Sales Team A', onTime: 85, late: 10, missed: 5 },
-  { team: 'Sales Team B', onTime: 78, late: 15, missed: 7 },
-  { team: 'Sales Team C', onTime: 92, late: 6, missed: 2 },
-  { team: 'Sales Team D', onTime: 88, late: 8, missed: 4 },
+const representativePerformance = [
+  { name: 'John Doe', onTime: 92, late: 4, missed: 1 },
+  { name: 'Jane Smith', onTime: 88, late: 8, missed: 4 },
+  { name: 'Mike Johnson', onTime: 85, late: 10, missed: 5 },
+  { name: 'Sarah Davis', onTime: 78, late: 15, missed: 7 },
+  { name: 'Tom Wilson', onTime: 95, late: 3, missed: 2 },
 ];
 
 const leadSourceData = [
@@ -120,16 +147,31 @@ const stats = [
 
 export default function ReportsPage() {
   const [timeRange, setTimeRange] = useState('6months');
+  const [customerGrowthFilter, setCustomerGrowthFilter] = useState('year');
+
+  const getChartData = () => {
+    return customerGrowthData[customerGrowthFilter as keyof typeof customerGrowthData];
+  };
+
+  const getXAxisKey = () => {
+    switch (customerGrowthFilter) {
+      case 'today': return 'time';
+      case 'week': return 'day';
+      case 'month': return 'week';
+      case 'year': return 'month';
+      default: return 'month';
+    }
+  };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900   :text-white mb-2">
+          <h1 className="text-3xl font-bold text-slate-900   dark:text-white mb-2">
             Reports & Analytics
           </h1>
-          <p className="text-slate-600   :text-slate-400">
+          <p className="text-slate-600   dark:text-slate-400">
             Track performance metrics and analyze trends
           </p>
         </div>
@@ -158,7 +200,7 @@ export default function ReportsPage() {
         {stats.map((stat) => (
           <Card
             key={stat.label}
-            className="border-0 shadow-lg bg-white   :bg-slate-800 hover:shadow-xl transition-all duration-300 group"
+            className="border-0 shadow-lg bg-white   dark:bg-slate-800 hover:shadow-xl transition-all duration-300 group"
           >
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
@@ -168,9 +210,8 @@ export default function ReportsPage() {
                   <stat.icon className="w-6 h-6 text-white" />
                 </div>
                 <div
-                  className={`flex items-center space-x-1 text-sm font-medium ${
-                    stat.trend === 'up' ? 'text-green-600' : 'text-red-600'
-                  }`}
+                  className={`flex items-center space-x-1 text-sm font-medium ${stat.trend === 'up' ? 'text-green-600' : 'text-red-600'
+                    }`}
                 >
                   {stat.trend === 'up' ? (
                     <ArrowUpRight className="w-4 h-4" />
@@ -180,10 +221,10 @@ export default function ReportsPage() {
                   <span>{stat.change}</span>
                 </div>
               </div>
-              <p className="text-sm text-slate-600   :text-slate-400 mb-1">
+              <p className="text-sm text-slate-600   dark:text-slate-400 mb-1">
                 {stat.label}
               </p>
-              <p className="text-3xl font-bold text-slate-900   :text-white">
+              <p className="text-3xl font-bold text-slate-900   dark:text-white">
                 {stat.value}
               </p>
             </CardContent>
@@ -193,7 +234,7 @@ export default function ReportsPage() {
 
       {/* Main Reports */}
       <Tabs defaultValue="customer" className="space-y-6">
-        <TabsList className="bg-white   :bg-slate-800 border border-slate-200   :border-slate-700 p-1">
+        <TabsList className="bg-white   dark:bg-slate-800 border border-slate-200   dark:border-slate-700 p-1">
           <TabsTrigger value="customer" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-cyan-500 data-[state=active]:text-white">
             <Users className="w-4 h-4 mr-2" />
             Customer Growth
@@ -204,27 +245,36 @@ export default function ReportsPage() {
           </TabsTrigger>
           <TabsTrigger value="followup" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-cyan-500 data-[state=active]:text-white">
             <Target className="w-4 h-4 mr-2" />
-            Follow-up Performance
+            Rep Performance
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="customer" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Customer Growth Chart */}
-            <Card className="border-0 shadow-lg bg-white   :bg-slate-800 lg:col-span-2">
+            <Card className="border-0 shadow-lg bg-white dark:bg-slate-800 lg:col-span-2">
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-slate-900   :text-white">
+                  <CardTitle className="text-slate-900 dark:text-white">
                     Customer Growth Trend
+
                   </CardTitle>
-                  <Badge variant="outline" className="bg-blue-50   :bg-blue-950 text-blue-600   :text-blue-400 border-blue-200   :border-blue-800">
-                    Last 7 Months
-                  </Badge>
+                  <Select value={customerGrowthFilter} onValueChange={setCustomerGrowthFilter}>
+                    <SelectTrigger className="w-[140px] h-8">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="today">Today</SelectItem>
+                      <SelectItem value="week">This Week</SelectItem>
+                      <SelectItem value="month">This Month</SelectItem>
+                      <SelectItem value="year">This Year</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={350}>
-                  <AreaChart data={customerGrowthData}>
+                  <AreaChart data={getChartData()}>
                     <defs>
                       <linearGradient id="colorCustomers" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
@@ -236,7 +286,7 @@ export default function ReportsPage() {
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                    <XAxis dataKey="month" stroke="#64748b" />
+                    <XAxis dataKey={getXAxisKey()} stroke="#64748b" />
                     <YAxis stroke="#64748b" />
                     <Tooltip
                       contentStyle={{
@@ -317,15 +367,14 @@ export default function ReportsPage() {
                       </div>
                       <div className="w-full bg-slate-200   :bg-slate-700 rounded-full h-3">
                         <div
-                          className={`h-3 rounded-full transition-all duration-500 ${
-                            index === 0
-                              ? 'bg-gradient-to-r from-blue-500 to-cyan-500'
-                              : index === 1
+                          className={`h-3 rounded-full transition-all duration-500 ${index === 0
+                            ? 'bg-gradient-to-r from-blue-500 to-cyan-500'
+                            : index === 1
                               ? 'bg-gradient-to-r from-purple-500 to-pink-500'
                               : index === 2
-                              ? 'bg-gradient-to-r from-green-500 to-emerald-500'
-                              : 'bg-gradient-to-r from-orange-500 to-red-500'
-                          }`}
+                                ? 'bg-gradient-to-r from-green-500 to-emerald-500'
+                                : 'bg-gradient-to-r from-orange-500 to-red-500'
+                            }`}
                           style={{ width: `${segment.percentage}%` }}
                         ></div>
                       </div>
@@ -405,13 +454,13 @@ export default function ReportsPage() {
         <TabsContent value="followup" className="space-y-6">
           <Card className="border-0 shadow-lg bg-white   :bg-slate-800">
             <CardHeader>
-              <CardTitle className="text-slate-900   :text-white">Follow-up Performance by Team</CardTitle>
+              <CardTitle className="text-slate-900   dark:text-white">Representative Performance</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={400}>
-                <BarChart data={followUpPerformance}>
+                <BarChart data={representativePerformance}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                  <XAxis dataKey="team" stroke="#64748b" />
+                  <XAxis dataKey="name" stroke="#64748b" />
                   <YAxis stroke="#64748b" />
                   <Tooltip
                     contentStyle={{
@@ -431,36 +480,35 @@ export default function ReportsPage() {
           </Card>
 
           {/* Performance Summary */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {followUpPerformance.map((team, index) => {
-              const total = team.onTime + team.late + team.missed;
-              const onTimeRate = ((team.onTime / total) * 100).toFixed(1);
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
+            {representativePerformance.map((rep, index) => {
+              const total = rep.onTime + rep.late + rep.missed;
+              const onTimeRate = ((rep.onTime / total) * 100).toFixed(1);
               return (
                 <Card
-                  key={team.team}
+                  key={rep.name}
                   className="border-0 shadow-lg bg-white   :bg-slate-800 hover:shadow-xl transition-all duration-300"
                 >
                   <CardContent className="p-6">
                     <div
-                      className={`w-12 h-12 rounded-lg mb-4 flex items-center justify-center ${
-                        index === 0
-                          ? 'bg-gradient-to-br from-blue-500 to-cyan-500'
-                          : index === 1
+                      className={`w-12 h-12 rounded-lg mb-4 flex items-center justify-center ${index === 0
+                        ? 'bg-gradient-to-br from-blue-500 to-cyan-500'
+                        : index === 1
                           ? 'bg-gradient-to-br from-purple-500 to-pink-500'
                           : index === 2
-                          ? 'bg-gradient-to-br from-green-500 to-emerald-500'
-                          : 'bg-gradient-to-br from-orange-500 to-red-500'
-                      }`}
+                            ? 'bg-gradient-to-br from-green-500 to-emerald-500'
+                            : 'bg-gradient-to-br from-orange-500 to-red-500'
+                        }`}
                     >
                       <Target className="w-6 h-6 text-white" />
                     </div>
-                    <h3 className="font-semibold text-slate-900   :text-white mb-1">
-                      {team.team}
+                    <h3 className="font-semibold text-slate-900   dark:text-white mb-1">
+                      {rep.name}
                     </h3>
-                    <p className="text-3xl font-bold text-slate-900   :text-white mb-2">
+                    <p className="text-3xl font-bold text-slate-900   dark:text-white mb-2">
                       {onTimeRate}%
                     </p>
-                    <p className="text-sm text-slate-600   :text-slate-400">
+                    <p className="text-sm text-slate-600   dark:text-slate-400">
                       On-time rate
                     </p>
                   </CardContent>
@@ -470,6 +518,6 @@ export default function ReportsPage() {
           </div>
         </TabsContent>
       </Tabs>
-    </div>
+    </div >
   );
 }
