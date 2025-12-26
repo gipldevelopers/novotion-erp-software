@@ -350,7 +350,6 @@ import Label from '@/app/hrms/components/form/Label';
 import { toast } from 'sonner';
 import { useParams } from 'next/navigation';
 import employeeService from '@/services/employeeService';
-import Button from '@/components/ui/button/Button';
 
 export default function EmployeeDocumentsPage() {
   const [uploadedFiles, setUploadedFiles] = useState({
@@ -755,15 +754,23 @@ export default function EmployeeDocumentsPage() {
         {/* Upload Button */}
         {hasFilesToUpload && (
           <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-            <Button
+            <button
               onClick={handleUploadAll}
               disabled={isUploading}
-              loading={isUploading}
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
-              <Upload className="w-4 h-4 mr-2" />
-              Upload All Documents
-            </Button>
+              {isUploading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <Upload className="w-4 h-4 mr-2" />
+                  Upload All Documents
+                </>
+              )}
+            </button>
           </div>
         )}
       </div>
@@ -777,8 +784,8 @@ export default function EmployeeDocumentsPage() {
           {['AADHAAR', 'PAN', 'RESUME', 'EDUCATION'].map((type) => (
             <div key={type} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
               <div className={`p-1 rounded-full ${existingDocuments.some(doc => doc.type === type)
-                  ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400'
-                  : 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400'
+                ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400'
+                : 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400'
                 }`}>
                 {existingDocuments.some(doc => doc.type === type) ? (
                   <CheckCircle className="w-4 h-4" />

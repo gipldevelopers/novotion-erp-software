@@ -23,7 +23,8 @@ import {
   Package,
   Shield,
   UserStar,
-  CalendarDays
+  CalendarDays,
+  Building2
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
@@ -443,38 +444,30 @@ const AppSidebar = () => {
       onMouseLeave={() => setIsHovered(false)}
     >
       <div
-        className={`py-4 flex border-b border-transparent ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-center"
+        className={`py-4 flex flex-col items-center border-b border-gray-200 dark:border-gray-700 ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-center"
           }`}
       >
-        <Link href="/">
+        <Link href="/" className="flex flex-col items-center gap-2">
           {isExpanded || isHovered || isMobileOpen ? (
             <>
-              <Image
-                className="dark:hidden"
-                src="/images/logo/GHR.PNG"
-                alt="Logo"
-                width={150}
-                height={40}
-                style={{ width: 'auto', height: 'auto' }} // Maintain aspect ratio
-                priority
-              />
-              <Image
-                className="hidden dark:block"
-                src="/images/logo/GHR2.PNG"
-                alt="Logo"
-                width={150}
-                height={40}
-                style={{ width: 'auto', height: 'auto' }} // Maintain aspect ratio
-              />
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                <Building2 className="w-7 h-7 text-white" />
+              </div>
+              <div className="text-center">
+                <p className="text-lg font-bold text-gray-900 dark:text-white">
+                  Novotion {userRole === "HR_ADMIN" || userRole === "SUPER_ADMIN" ? "HR" : "Employee"}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {userRole === "SUPER_ADMIN" ? "Super Admin Portal" :
+                    userRole === "HR_ADMIN" ? "Management System" :
+                      "Self Service Portal"}
+                </p>
+              </div>
             </>
           ) : (
-            <Image
-              src="/images/logo/GHR-COLLAPSED.PNG"
-              alt="Logo"
-              width={50}
-              height={50}
-              style={{ width: 'auto', height: 'auto' }}
-            />
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+              <Building2 className="w-7 h-7 text-white" />
+            </div>
           )}
         </Link>
       </div>
