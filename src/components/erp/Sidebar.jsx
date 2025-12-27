@@ -90,7 +90,7 @@ export const Sidebar = () => {
   const { isCollapsed: isCollapsedDesktop, toggleCollapsed, isMobileOpen, setMobileOpen } = useSidebarStore();
   const { can } = usePermission();
   const { logout, user } = useAuthStore();
-  const [expandedItems, setExpandedItems] = useState(['Accounting', 'CRM', 'HRMS', 'POS', 'Admin']);
+  const [expandedItems, setExpandedItems] = useState([]);
   useEffect(() => {
     const mql = window.matchMedia('(min-width: 1024px)');
     const onChange = () => {
