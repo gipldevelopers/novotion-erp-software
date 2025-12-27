@@ -168,9 +168,12 @@ export const Sidebar = () => {
   const SidebarContent = ({ collapsed, mode }) => {
     return (<div className="flex h-full flex-col">
       <div className={cn('h-16 flex items-center justify-between px-4 border-b border-sidebar-border', collapsed && 'px-2')}>
-        {!collapsed && (<span className="text-lg font-semibold text-sidebar-accent-foreground">
-          ERP System
-        </span>)}
+        {!collapsed && (
+          <div className="flex flex-col leading-tight">
+            <span className="text-lg font-bold text-sidebar-accent-foreground">Novotion</span>
+            <span className="text-xs font-medium text-sidebar-primary uppercase tracking-wider">erp</span>
+          </div>
+        )}
         {mode === 'mobile' ? (<Button variant="ghost" size="icon" onClick={() => setMobileOpen(false)} className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
           <X className="h-4 w-4" />
         </Button>) : (<Button variant="ghost" size="icon" onClick={toggleCollapsed} className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
