@@ -1,3 +1,4 @@
+// Updated: 2025-12-27
 import { DataTable } from '@/components/erp/DataTable';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

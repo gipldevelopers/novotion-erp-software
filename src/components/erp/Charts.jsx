@@ -1,3 +1,4 @@
+// Updated: 2025-12-27
 import { AreaChart, Area, BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, } from 'recharts';
 export const ERPAreaChart = ({ data, xKey, yKey, color = 'hsl(var(--primary))', className, }) => {
     return (<div className={className}>

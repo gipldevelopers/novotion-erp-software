@@ -1,3 +1,4 @@
+// Updated: 2025-12-27
 import { Download, Plus } from 'lucide-react';
 import { DataTable } from '@/components/erp/DataTable';
 import { PermissionGuard } from '@/components/erp/PermissionGuard';

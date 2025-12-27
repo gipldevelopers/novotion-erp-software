@@ -1,3 +1,4 @@
+// Updated: 2025-12-27
 import { ERPBarChart } from '@/components/erp/Charts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatCard } from '@/components/erp/StatCard';

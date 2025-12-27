@@ -1,3 +1,4 @@
+// Updated: 2025-12-27
 import { useState } from 'react';
 import { Search, Plus, Minus, CreditCard, Banknote, Smartphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';

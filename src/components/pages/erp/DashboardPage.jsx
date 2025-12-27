@@ -1,3 +1,4 @@
+// Updated: 2025-12-27
 import { DollarSign, Users, FileText, TrendingUp, ArrowUpRight, ArrowDownRight, } from 'lucide-react';
 import { StatCard } from '@/components/erp/StatCard';
 import { ERPAreaChart, ERPBarChart, ERPPieChart } from '@/components/erp/Charts';

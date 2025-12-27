@@ -1,3 +1,4 @@
+// Updated: 2025-12-27
 'use client';
 import { AccountingDashboardPage } from '@/pages/erp/accounting/AccountingDashboardPage';
 export default function Page() {

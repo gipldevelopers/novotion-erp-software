@@ -1,3 +1,4 @@
+// Updated: 2025-12-27
 import { Bell, Search, Moon, Sun, Palette, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

@@ -1,3 +1,4 @@
+// Updated: 2025-12-27
 import { useAuthStore } from '@/stores/authStore';
 export const usePermission = () => {
     const { hasPermission, hasAnyPermission, user } = useAuthStore();

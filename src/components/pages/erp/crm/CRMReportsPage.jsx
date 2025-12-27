@@ -1,3 +1,4 @@
+// Updated: 2025-12-27
 import { Download } from 'lucide-react';
 import { StatCard } from '@/components/erp/StatCard';
 import { ERPLineChart, ERPBarChart, ERPPieChart } from '@/components/erp/Charts';

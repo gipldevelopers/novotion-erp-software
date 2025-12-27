@@ -1,3 +1,4 @@
+// Updated: 2025-12-27
 import { usePermission } from '@/hooks/usePermission';
 export const PermissionGuard = ({ permission, permissions, requireAll = false, fallback = null, children, }) => {
     const { can, canAny, canAll } = usePermission();

@@ -1,3 +1,4 @@
+// Updated: 2025-12-27
 import { services, clients, invoices, sessions, serviceCategories } from './posMockData';
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));

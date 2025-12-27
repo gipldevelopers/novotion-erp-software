@@ -1,3 +1,4 @@
+// Updated: 2025-12-27
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const mockAttendance = [

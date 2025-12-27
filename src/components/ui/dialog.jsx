@@ -1,3 +1,4 @@
+// Updated: 2025-12-27
 import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";

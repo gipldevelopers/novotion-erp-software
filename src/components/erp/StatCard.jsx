@@ -1,3 +1,4 @@
+// Updated: 2025-12-27
 import { cn } from '@/lib/utils';
 export const StatCard = ({ title, value, change, changeType = 'neutral', icon: Icon, iconColor = 'text-primary', className, }) => {
     return (<div className={cn('bg-card border border-border rounded-lg p-6 transition-all duration-200 hover:shadow-md hover:border-primary/20', className)}>

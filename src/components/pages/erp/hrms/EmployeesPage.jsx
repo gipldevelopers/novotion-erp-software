@@ -1,3 +1,4 @@
+// Updated: 2025-12-27
 import { Plus, Download, MoreHorizontal, Eye, Edit } from 'lucide-react';
 import { DataTable } from '@/components/erp/DataTable';
 import { PermissionGuard } from '@/components/erp/PermissionGuard';
