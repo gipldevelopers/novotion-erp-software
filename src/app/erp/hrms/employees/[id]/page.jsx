@@ -2,56 +2,128 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { hrmsService } from '@/services/hrmsService';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Mail, Phone, MapPin, Briefcase, Calendar, Building, ChevronLeft, Edit } from 'lucide-react';
+import { Mail, Phone, MapPin, Briefcase, Building, ChevronLeft, Edit, MoreHorizontal } from 'lucide-react';
 import EmployeeDocuments from './documents';
 import EmployeeAttendance from './attendance';
 import EmployeePayroll from './payroll';
 import EmployeePerformance from './performance';
 import EmployeeExit from './exit';
+import { Checkbox } from '@/components/ui/checkbox';
+import { toast } from 'sonner';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
+    DropdownMenuSeparator,
+    DropdownMenuSub,
+    DropdownMenuSubContent,
+    DropdownMenuSubTrigger,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 export default function EmployeeProfilePage() {
     const { id } = useParams();
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const defaultTab = searchParams.get('tab') || 'overview';
     const [employee, setEmployee] = useState(null);
     const [data, setData] = useState({ documents: [], attendance: [], payroll: [], performance: [] });
     const [loading, setLoading] = useState(true);
+    const [managerName, setManagerName] = useState('N/A');
+    const [directReports, setDirectReports] = useState([]);
+
+    const loadProfile = async () => {
+        try {
+            const [emp, docs, att, pay, perf, allEmployees] = await Promise.all([
+                hrmsService.getEmployeeById(id),
+                hrmsService.getDocuments(id),
+                hrmsService.getAttendance({ employeeId: id }),
+                hrmsService.getPayrollByEmployee(id),
+                hrmsService.getPerformanceReviews(id),
+                hrmsService.getEmployees(),
+            ]);
+
+            setEmployee(emp);
+            setData({
+                documents: docs,
+                attendance: att,
+                payroll: pay,
+                performance: perf
+            });
+
+            const mgr = emp?.manager ? allEmployees.find((e) => e.id === emp.manager) : null;
+            setManagerName(mgr ? `${mgr.firstName} ${mgr.lastName}` : 'N/A');
+            setDirectReports(allEmployees.filter((e) => e.manager === id));
+        } catch (error) {
+            console.error('Failed to load profile', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const loadProfile = async () => {
-            try {
-                const [emp, docs, att, pay, perf] = await Promise.all([
-                    hrmsService.getEmployeeById(id),
-                    hrmsService.getDocuments(id),
-                    hrmsService.getAttendance(), // Filtered client side below
-                    hrmsService.getPayrollByEmployee(id),
-                    hrmsService.getPerformanceReviews(id)
-                ]);
-
-                setEmployee(emp);
-                setData({
-                    documents: docs,
-                    attendance: att.filter(a => a.employeeId === id),
-                    payroll: pay,
-                    performance: perf
-                });
-            } catch (error) {
-                console.error('Failed to load profile', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        if (id) loadProfile();
+        if (!id) return;
+        setLoading(true);
+        loadProfile();
     }, [id]);
 
     if (loading) return <div className="p-8">Loading profile...</div>;
     if (!employee) return <div className="p-8">Employee not found.</div>;
+
+    const onboardingTasks = employee.onboarding?.tasks || [];
+    const onboardingCompleted = employee.onboarding?.completedAt;
+
+    const handleToggleTask = async (taskId, done) => {
+        try {
+            const updated = await hrmsService.updateOnboardingTask(id, taskId, done);
+            if (!updated) throw new Error('Failed');
+            setEmployee(updated);
+        } catch {
+            toast.error('Failed to update onboarding task');
+        }
+    };
+
+    const handleCompleteOnboarding = async () => {
+        try {
+            const updated = await hrmsService.completeOnboarding(id);
+            if (!updated) throw new Error('Failed');
+            setEmployee(updated);
+            toast.success('Onboarding completed');
+        } catch {
+            toast.error('Failed to complete onboarding');
+        }
+    };
+
+    const statusOptions = [
+        'Onboarding',
+        'Probation',
+        'Active',
+        'Notice Period',
+        'Resigned',
+        'Terminated',
+    ];
+
+    const handleSetStatus = async (nextStatus) => {
+        if (!nextStatus || nextStatus === employee.status) return;
+        try {
+            const updated = await hrmsService.updateEmployee(id, { status: nextStatus });
+            if (!updated) throw new Error('Failed');
+            setEmployee(updated);
+            toast.success('Status updated');
+        } catch {
+            toast.error('Failed to update status');
+        }
+    };
 
     return (
         <div className="p-8 space-y-8">
@@ -77,16 +149,53 @@ export default function EmployeeProfilePage() {
                     </div>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline">
+                    <Button variant="outline" onClick={() => router.push(`/erp/hrms/employees/${id}/edit`)}>
                         <Edit className="mr-2 h-4 w-4" /> Edit Profile
                     </Button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="icon">
+                                <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="min-w-[220px]">
+                            <DropdownMenuLabel>Employee actions</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => router.push(`/erp/hrms/employees/${id}?tab=overview`)}>
+                                Onboarding
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => router.push(`/erp/hrms/employees/${id}?tab=exit`)}>
+                                Offboarding
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => router.push(`/erp/hrms/employees/hierarchy?focus=${id}`)}>
+                                Reporting hierarchy
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => router.push(`/erp/hrms/employees/${id}/edit`)}>
+                                Role & department
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuSub>
+                                <DropdownMenuSubTrigger>
+                                    Employee status
+                                </DropdownMenuSubTrigger>
+                                <DropdownMenuSubContent className="min-w-[200px]">
+                                    <DropdownMenuRadioGroup value={employee.status} onValueChange={handleSetStatus}>
+                                        {statusOptions.map((s) => (
+                                            <DropdownMenuRadioItem key={s} value={s}>
+                                                {s}
+                                            </DropdownMenuRadioItem>
+                                        ))}
+                                    </DropdownMenuRadioGroup>
+                                </DropdownMenuSubContent>
+                            </DropdownMenuSub>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                     <Badge className="text-sm px-3 py-1" variant={employee.status === 'Active' ? 'default' : 'secondary'}>
                         {employee.status}
                     </Badge>
                 </div>
             </div>
 
-            <Tabs defaultValue="overview" className="space-y-6">
+            <Tabs defaultValue={defaultTab} className="space-y-6">
                 <TabsList className="w-full justify-start border-b rounded-none h-auto p-0 bg-transparent">
                     <TabsTrigger value="overview" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3">Overview</TabsTrigger>
                     <TabsTrigger value="documents" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3">Documents</TabsTrigger>
@@ -97,6 +206,32 @@ export default function EmployeeProfilePage() {
                 </TabsList>
 
                 <TabsContent value="overview" className="space-y-6">
+                    {(employee.status === 'Onboarding' || employee.status === 'Probation') && (
+                        <Card>
+                            <CardHeader className="flex flex-row items-center justify-between">
+                                <CardTitle>Onboarding</CardTitle>
+                                <div className="flex items-center gap-2">
+                                    {onboardingCompleted ? (
+                                        <Badge variant="secondary">Completed {onboardingCompleted}</Badge>
+                                    ) : (
+                                        <Button size="sm" onClick={handleCompleteOnboarding}>Mark Onboarded</Button>
+                                    )}
+                                </div>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                                {onboardingTasks.length === 0 ? (
+                                    <div className="text-sm text-muted-foreground">No onboarding checklist available.</div>
+                                ) : (
+                                    onboardingTasks.map((t) => (
+                                        <div key={t.id} className="flex items-center gap-3">
+                                            <Checkbox checked={!!t.done} onCheckedChange={(v) => handleToggleTask(t.id, !!v)} />
+                                            <div className="text-sm">{t.title}</div>
+                                        </div>
+                                    ))
+                                )}
+                            </CardContent>
+                        </Card>
+                    )}
                     <div className="grid gap-6 md:grid-cols-2">
                         <Card>
                             <CardHeader>
@@ -133,7 +268,7 @@ export default function EmployeeProfilePage() {
                                 </div>
                                 <div className="flex justify-between border-b pb-2">
                                     <span className="text-muted-foreground">Manager</span>
-                                    <span className="font-medium">{employee.manager || 'N/A'}</span>
+                                    <span className="font-medium">{managerName}</span>
                                 </div>
                                 <div className="flex justify-between pt-2">
                                     <span className="text-muted-foreground">Annual Salary</span>
@@ -142,10 +277,38 @@ export default function EmployeeProfilePage() {
                             </CardContent>
                         </Card>
                     </div>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Reporting</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            {directReports.length === 0 ? (
+                                <div className="text-sm text-muted-foreground">No direct reports.</div>
+                            ) : (
+                                <div className="space-y-2">
+                                    {directReports.map((e) => (
+                                        <div key={e.id} className="flex items-center justify-between rounded-md border p-3">
+                                            <div className="text-sm font-medium">{e.firstName} {e.lastName}</div>
+                                            <Button variant="outline" size="sm" onClick={() => router.push(`/erp/hrms/employees/${e.id}`)}>View</Button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            <div className="pt-4">
+                                <Button variant="outline" onClick={() => router.push(`/erp/hrms/employees/hierarchy?focus=${id}`)}>
+                                    View Hierarchy Tree
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
                 </TabsContent>
 
                 <TabsContent value="documents">
-                    <EmployeeDocuments documents={data.documents} />
+                    <EmployeeDocuments employeeId={id} documents={data.documents} onChange={async () => {
+                        const docs = await hrmsService.getDocuments(id);
+                        setData((prev) => ({ ...prev, documents: docs }));
+                    }} />
                 </TabsContent>
                 <TabsContent value="attendance">
                     <EmployeeAttendance attendance={data.attendance} />
@@ -157,7 +320,7 @@ export default function EmployeeProfilePage() {
                     <EmployeePerformance performance={data.performance} />
                 </TabsContent>
                 <TabsContent value="exit">
-                    <EmployeeExit />
+                    <EmployeeExit employeeId={id} employeeStatus={employee.status} exit={employee.exit} onChange={loadProfile} />
                 </TabsContent>
             </Tabs>
         </div>

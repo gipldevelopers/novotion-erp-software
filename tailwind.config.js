@@ -80,6 +80,9 @@ export default {
                     4: "hsl(var(--chart-4))",
                     5: "hsl(var(--chart-5))",
                 },
+                "premium-1": "hsl(var(--premium-1))",
+                "premium-2": "hsl(var(--premium-2))",
+                "premium-3": "hsl(var(--premium-3))",
             },
             borderRadius: {
                 lg: "var(--radius)",

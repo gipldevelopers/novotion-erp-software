@@ -12,80 +12,119 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipTrigger, } from '@/components/ui/tooltip';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
-const navigation = [
-  {
-    title: 'Dashboard',
-    href: '/erp/dashboard',
-    icon: LayoutDashboard,
-    permission: 'dashboard.view',
-  },
-  {
-    title: 'Accounting',
-    icon: Calculator,
-    permission: 'accounting.view',
-    children: [
-      { title: 'Dashboard', href: '/erp/accounting/dashboard', icon: PieChart, permission: 'accounting.view' },
-      { title: 'Invoices', href: '/erp/accounting/invoices', icon: FileText, permission: 'invoices.view' },
-      { title: 'Payments', href: '/erp/accounting/payments', icon: CreditCard, permission: 'payments.view' },
-      { title: 'Ledgers', href: '/erp/accounting/ledgers', icon: BookOpen, permission: 'ledgers.view' },
-      { title: 'Expenses', href: '/erp/accounting/expenses', icon: Receipt, permission: 'expenses.view' },
-      { title: 'Reports', href: '/erp/accounting/reports', icon: PieChart, permission: 'reports.view' },
-    ],
-  },
-  {
-    title: 'CRM',
-    icon: Contact,
-    permission: 'crm.view',
-    children: [
-      { title: 'Customers', href: '/erp/crm/customers', icon: Users, permission: 'customers.view' },
-      { title: 'Leads', href: '/erp/crm/leads', icon: UserPlus, permission: 'leads.view' },
-      { title: 'Activities', href: '/erp/crm/activities', icon: Activity, permission: 'crm.view' },
-      { title: 'Tasks', href: '/erp/crm/tasks', icon: ListTodo, permission: 'crm.view' },
-      { title: 'Comms', href: '/erp/crm/communications', icon: MessageSquare, permission: 'crm.view' },
-      { title: 'Calendar', href: '/erp/crm/calendar', icon: Calendar, permission: 'crm.view' },
-      { title: 'Reports', href: '/erp/crm/reports', icon: PieChart, permission: 'reports.view' },
-    ],
-  },
-  {
-    title: 'HRMS',
-    icon: Users,
-    permission: 'hrms.view',
-    children: [
-      { title: 'Dashboard', href: '/erp/hrms/dashboard', icon: LayoutGrid, permission: 'hrms.view' },
-      { title: 'Employees', href: '/erp/hrms/employees', icon: Users, permission: 'employees.view' },
-      { title: 'Attendance', href: '/erp/hrms/attendance', icon: Clock, permission: 'attendance.view' },
-      { title: 'Leaves', href: '/erp/hrms/leaves', icon: Calendar, permission: 'leaves.view' },
-      { title: 'Payroll', href: '/erp/hrms/payroll', icon: DollarSign, permission: 'payroll.view' },
-      { title: 'Performance', href: '/erp/hrms/performance', icon: TrendingUp, permission: 'performance.view' },
-      { title: 'Reports', href: '/erp/hrms/reports', icon: PieChart, permission: 'hrms_reports.view' },
-    ],
-  },
-  {
-    title: 'POS',
-    icon: ShoppingCart,
-    permission: 'pos.view',
-    children: [
-      { title: 'Dashboard', href: '/erp/pos/dashboard', icon: LayoutGrid, permission: 'pos.view' },
-      { title: 'Billing', href: '/erp/pos/billing', icon: ShoppingCart, permission: 'billing.view' },
-      { title: 'Invoices', href: '/erp/pos/invoices', icon: ReceiptText, permission: 'invoices.view' },
-      { title: 'Services', href: '/erp/pos/products', icon: Package, permission: 'products.view' },
-      { title: 'Customers', href: '/erp/pos/customers', icon: Users, permission: 'customers.view' },
-      { title: 'Sessions', href: '/erp/pos/sessions', icon: Clock, permission: 'sessions.view' },
-      { title: 'Reports', href: '/erp/pos/reports', icon: PieChart, permission: 'pos_reports.view' },
-    ],
-  },
-  {
-    title: 'Admin',
-    icon: Settings,
-    permission: 'admin.view',
-    children: [
-      { title: 'Users', href: '/erp/admin/users', icon: Users, permission: 'users.view' },
-      { title: 'Roles', href: '/erp/admin/roles', icon: Shield, permission: 'roles.view' },
-      { title: 'Permissions', href: '/erp/admin/permissions', icon: Lock, permission: 'permissions.view' },
-      { title: 'Settings', href: '/erp/admin/settings', icon: Settings, permission: 'settings.view' },
-    ],
-  },
-];
+const getNavigation = (user) => {
+  const isEmployee = user?.role === 'employee';
+  const isManager = user?.isManager || user?.role === 'manager';
+  const isHRAdmin = user?.role === 'hr' || user?.role === 'admin';
+
+  // Employee-specific HRMS navigation
+  if (isEmployee) {
+    return [
+      {
+        title: 'Dashboard',
+        href: '/erp/dashboard',
+        icon: LayoutDashboard,
+        permission: 'dashboard.view',
+      },
+      {
+        title: 'My HRMS',
+        icon: Users,
+        permission: 'hrms.view',
+        children: [
+          { title: 'My Dashboard', href: '/erp/hrms/me/dashboard', icon: LayoutGrid, permission: 'hrms.view' },
+          { title: 'My Attendance', href: '/erp/hrms/me/attendance', icon: Clock, permission: 'attendance.view' },
+          { title: 'My Leaves', href: '/erp/hrms/me/leaves', icon: Calendar, permission: 'leaves.view' },
+          { title: 'My Payslips', href: '/erp/hrms/me/payslips', icon: DollarSign, permission: 'payroll.view' },
+          { title: 'My Performance', href: '/erp/hrms/me/performance', icon: TrendingUp, permission: 'performance.view' },
+        ],
+      },
+    ];
+  }
+
+  // Manager/HR Admin - Full navigation
+  return [
+    {
+      title: 'Dashboard',
+      href: '/erp/dashboard',
+      icon: LayoutDashboard,
+      permission: 'dashboard.view',
+    },
+    {
+      title: 'Accounting',
+      icon: Calculator,
+      permission: 'accounting.view',
+      children: [
+        { title: 'Dashboard', href: '/erp/accounting/dashboard', icon: PieChart, permission: 'accounting.view' },
+        { title: 'Invoices', href: '/erp/accounting/invoices', icon: FileText, permission: 'invoices.view' },
+        { title: 'Payments', href: '/erp/accounting/payments', icon: CreditCard, permission: 'payments.view' },
+        { title: 'Ledgers', href: '/erp/accounting/ledgers', icon: BookOpen, permission: 'ledgers.view' },
+        { title: 'Expenses', href: '/erp/accounting/expenses', icon: Receipt, permission: 'expenses.view' },
+        { title: 'Reports', href: '/erp/accounting/reports', icon: PieChart, permission: 'reports.view' },
+      ],
+    },
+    {
+      title: 'CRM',
+      icon: Contact,
+      permission: 'crm.view',
+      children: [
+        { title: 'Customers', href: '/erp/crm/customers', icon: Users, permission: 'customers.view' },
+        { title: 'Leads', href: '/erp/crm/leads', icon: UserPlus, permission: 'leads.view' },
+        { title: 'Activities', href: '/erp/crm/activities', icon: Activity, permission: 'crm.view' },
+        { title: 'Tasks', href: '/erp/crm/tasks', icon: ListTodo, permission: 'crm.view' },
+        { title: 'Comms', href: '/erp/crm/communications', icon: MessageSquare, permission: 'crm.view' },
+        { title: 'Calendar', href: '/erp/crm/calendar', icon: Calendar, permission: 'crm.view' },
+        { title: 'Reports', href: '/erp/crm/reports', icon: PieChart, permission: 'reports.view' },
+      ],
+    },
+    {
+      title: 'HRMS',
+      icon: Users,
+      permission: 'hrms.view',
+      children: isManager && !isHRAdmin ? [
+        // Manager view
+        { title: 'My Dashboard', href: '/erp/hrms/me/dashboard', icon: LayoutGrid, permission: 'hrms.view' },
+        { title: 'Team Dashboard', href: '/erp/hrms/manager/dashboard', icon: Users, permission: 'hrms.view' },
+        { title: 'Team Members', href: '/erp/hrms/manager/team', icon: Users, permission: 'hrms.view' },
+        { title: 'Approvals', href: '/erp/hrms/manager/approvals', icon: Clock, permission: 'leaves.view' },
+        { title: 'Team Attendance', href: '/erp/hrms/manager/attendance', icon: Calendar, permission: 'attendance.view' },
+      ] : [
+        // HR Admin view
+        { title: 'Dashboard', href: '/erp/hrms/dashboard', icon: LayoutGrid, permission: 'hrms.view' },
+        { title: 'Employees', href: '/erp/hrms/employees', icon: Users, permission: 'employees.view' },
+        { title: 'Attendance', href: '/erp/hrms/attendance', icon: Clock, permission: 'attendance.view' },
+        { title: 'Leaves', href: '/erp/hrms/leaves', icon: Calendar, permission: 'leaves.view' },
+        { title: 'Payroll', href: '/erp/hrms/payroll', icon: DollarSign, permission: 'payroll.view' },
+        { title: 'Performance', href: '/erp/hrms/performance', icon: TrendingUp, permission: 'performance.view' },
+        { title: 'Reports', href: '/erp/hrms/reports', icon: PieChart, permission: 'hrms_reports.view' },
+      ],
+    },
+    {
+      title: 'POS',
+      icon: ShoppingCart,
+      permission: 'pos.view',
+      children: [
+        { title: 'Dashboard', href: '/erp/pos/dashboard', icon: LayoutGrid, permission: 'pos.view' },
+        { title: 'Billing', href: '/erp/pos/billing', icon: ShoppingCart, permission: 'billing.view' },
+        { title: 'Invoices', href: '/erp/pos/invoices', icon: ReceiptText, permission: 'invoices.view' },
+        { title: 'Services', href: '/erp/pos/products', icon: Package, permission: 'products.view' },
+        { title: 'Customers', href: '/erp/pos/customers', icon: Users, permission: 'customers.view' },
+        { title: 'Sessions', href: '/erp/pos/sessions', icon: Clock, permission: 'sessions.view' },
+        { title: 'Reports', href: '/erp/pos/reports', icon: PieChart, permission: 'pos_reports.view' },
+      ],
+    },
+    {
+      title: 'Admin',
+      icon: Settings,
+      permission: 'admin.view',
+      children: [
+        { title: 'Users', href: '/erp/admin/users', icon: Users, permission: 'users.view' },
+        { title: 'Roles', href: '/erp/admin/roles', icon: Shield, permission: 'roles.view' },
+        { title: 'Permissions', href: '/erp/admin/permissions', icon: Lock, permission: 'permissions.view' },
+        { title: 'Settings', href: '/erp/admin/settings', icon: Settings, permission: 'settings.view' },
+      ],
+    },
+  ];
+};
 export const Sidebar = () => {
   const pathname = usePathname();
   const { isCollapsed: isCollapsedDesktop, toggleCollapsed, isMobileOpen, setMobileOpen } = useSidebarStore();
@@ -183,7 +222,7 @@ export const Sidebar = () => {
 
       <ScrollArea className="flex-1 py-4">
         <nav className={cn('space-y-1', collapsed ? 'px-1' : 'px-2')}>
-          {navigation.map((item) => renderNavItem(item, collapsed))}
+          {getNavigation(user).map((item) => renderNavItem(item, collapsed))}
         </nav>
       </ScrollArea>
 

@@ -122,15 +122,88 @@ const rolePermissions = {
         'pos.view',
         'billing.view',
     ],
+    employee: [
+        'dashboard.view',
+        'hrms.view',
+        'attendance.view',
+        'leaves.view', 'leaves.create',
+        'payroll.view',
+        'performance.view',
+    ],
 };
 const mockUsers = {
-    admin: { id: '1', name: 'Admin User', email: 'admin@erp.com', role: 'admin' },
-    manager: { id: '2', name: 'Manager User', email: 'manager@erp.com', role: 'manager' },
-    accountant: { id: '3', name: 'Accountant User', email: 'accountant@erp.com', role: 'accountant' },
-    hr: { id: '4', name: 'HR User', email: 'hr@erp.com', role: 'hr' },
-    sales: { id: '5', name: 'Sales User', email: 'sales@erp.com', role: 'sales' },
-    cashier: { id: '6', name: 'Cashier User', email: 'cashier@erp.com', role: 'cashier' },
-    viewer: { id: '7', name: 'Viewer User', email: 'viewer@erp.com', role: 'viewer' },
+    admin: {
+        id: '1',
+        name: 'Admin User',
+        email: 'admin@erp.com',
+        role: 'admin',
+        employeeId: 'EMP-001',
+        isManager: false,
+        roles: ['admin', 'hr_admin']
+    },
+    manager: {
+        id: '2',
+        name: 'Manager User',
+        email: 'manager@erp.com',
+        role: 'manager',
+        employeeId: 'EMP-002',
+        isManager: true,
+        roles: ['manager']
+    },
+    accountant: {
+        id: '3',
+        name: 'Accountant User',
+        email: 'accountant@erp.com',
+        role: 'accountant',
+        employeeId: 'EMP-003',
+        isManager: false,
+        roles: ['accountant']
+    },
+    hr: {
+        id: '4',
+        name: 'HR Manager',
+        email: 'hr@erp.com',
+        role: 'hr',
+        employeeId: 'EMP-004',
+        isManager: true,
+        roles: ['hr_admin', 'manager']
+    },
+    sales: {
+        id: '5',
+        name: 'Sales User',
+        email: 'sales@erp.com',
+        role: 'sales',
+        employeeId: 'EMP-005',
+        isManager: false,
+        roles: ['sales']
+    },
+    cashier: {
+        id: '6',
+        name: 'Cashier User',
+        email: 'cashier@erp.com',
+        role: 'cashier',
+        employeeId: 'EMP-006',
+        isManager: false,
+        roles: ['cashier']
+    },
+    viewer: {
+        id: '7',
+        name: 'Viewer User',
+        email: 'viewer@erp.com',
+        role: 'viewer',
+        employeeId: 'EMP-007',
+        isManager: false,
+        roles: ['viewer']
+    },
+    employee: {
+        id: '8',
+        name: 'John Employee',
+        email: 'employee@erp.com',
+        role: 'employee',
+        employeeId: 'EMP-101',
+        isManager: false,
+        roles: ['employee']
+    },
 };
 export const useAuthStore = create()(persist((set, get) => ({
     user: null,

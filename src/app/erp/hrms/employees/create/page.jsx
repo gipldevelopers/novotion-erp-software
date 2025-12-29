@@ -1,7 +1,7 @@
 // Updated: 2025-12-27
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { hrmsService } from '@/services/hrmsService';
 import { Button } from '@/components/ui/button';
@@ -10,12 +10,21 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 export default function CreateEmployeePage() {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
+    const [loadingOptions, setLoadingOptions] = useState(true);
+    const [departments, setDepartments] = useState([]);
+    const [jobRoles, setJobRoles] = useState([]);
+    const [employees, setEmployees] = useState([]);
+    const [isDeptDialogOpen, setIsDeptDialogOpen] = useState(false);
+    const [newDeptName, setNewDeptName] = useState('');
+    const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
+    const [newRoleName, setNewRoleName] = useState('');
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
@@ -25,8 +34,35 @@ export default function CreateEmployeePage() {
         designation: '',
         salary: '',
         address: '',
-        status: 'Active'
+        status: 'Onboarding',
+        manager: ''
     });
+
+    const managerOptions = useMemo(
+        () => employees,
+        [employees]
+    );
+
+    useEffect(() => {
+        const loadOptions = async () => {
+            setLoadingOptions(true);
+            try {
+                const [deptList, roleList, empList] = await Promise.all([
+                    hrmsService.getDepartments(),
+                    hrmsService.getJobRoles(),
+                    hrmsService.getEmployees(),
+                ]);
+                setDepartments(deptList);
+                setJobRoles(roleList);
+                setEmployees(empList);
+            } catch (e) {
+                toast.error('Failed to load HR options');
+            } finally {
+                setLoadingOptions(false);
+            }
+        };
+        loadOptions();
+    }, []);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -39,11 +75,19 @@ export default function CreateEmployeePage() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!formData.department) {
+            toast.error('Please select a department');
+            return;
+        }
+        if (!formData.designation) {
+            toast.error('Please select a role');
+            return;
+        }
         setIsLoading(true);
         try {
             await hrmsService.createEmployee({
                 ...formData,
-                salary: Number(formData.salary)
+                salary: Number(formData.salary) || 0
             });
             toast.success("Employee created successfully");
             router.push('/erp/hrms/employees');
@@ -52,6 +96,44 @@ export default function CreateEmployeePage() {
             console.error(error);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const openDeptDialog = () => {
+        setNewDeptName('');
+        setIsDeptDialogOpen(true);
+    };
+
+    const handleAddDepartment = async () => {
+        try {
+            const created = await hrmsService.addDepartment(newDeptName);
+            if (!created) throw new Error('Create failed');
+            const next = await hrmsService.getDepartments();
+            setDepartments(next);
+            setFormData((prev) => ({ ...prev, department: created.name }));
+            toast.success('Department added');
+            setIsDeptDialogOpen(false);
+        } catch {
+            toast.error('Failed to add department');
+        }
+    };
+
+    const openRoleDialog = () => {
+        setNewRoleName('');
+        setIsRoleDialogOpen(true);
+    };
+
+    const handleAddRole = async () => {
+        try {
+            const created = await hrmsService.addJobRole(newRoleName);
+            if (!created) throw new Error('Create failed');
+            const next = await hrmsService.getJobRoles();
+            setJobRoles(next);
+            setFormData((prev) => ({ ...prev, designation: created.name }));
+            toast.success('Role added');
+            setIsRoleDialogOpen(false);
+        } catch {
+            toast.error('Failed to add role');
         }
     };
 
@@ -97,44 +179,82 @@ export default function CreateEmployeePage() {
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label htmlFor="department">Department</Label>
-                                <Select onValueChange={(val) => handleSelectChange('department', val)}>
+                                <div className="flex items-center justify-between">
+                                    <Label htmlFor="department">Department</Label>
+                                    <Button type="button" variant="ghost" size="sm" onClick={openDeptDialog}>
+                                        <Plus className="h-4 w-4 mr-1" /> Add
+                                    </Button>
+                                </div>
+                                <Select value={formData.department} onValueChange={(val) => handleSelectChange('department', val)}>
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select Department" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="Engineering">Engineering</SelectItem>
-                                        <SelectItem value="Product">Product</SelectItem>
-                                        <SelectItem value="Sales">Sales</SelectItem>
-                                        <SelectItem value="Marketing">Marketing</SelectItem>
-                                        <SelectItem value="HR">HR</SelectItem>
-                                        <SelectItem value="Finance">Finance</SelectItem>
+                                        {departments.map((d) => (
+                                            <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="designation">Designation</Label>
-                                <Input id="designation" name="designation" value={formData.designation} onChange={handleChange} required />
+                                <div className="flex items-center justify-between">
+                                    <Label htmlFor="designation">Role</Label>
+                                    <Button type="button" variant="ghost" size="sm" onClick={openRoleDialog}>
+                                        <Plus className="h-4 w-4 mr-1" /> Add
+                                    </Button>
+                                </div>
+                                <Select value={formData.designation} onValueChange={(val) => handleSelectChange('designation', val)}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select Role" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {jobRoles.map((r) => (
+                                            <SelectItem key={r.id} value={r.name}>{r.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
+                                <Label htmlFor="manager">Reporting Manager</Label>
+                                <Select value={formData.manager || 'none'} onValueChange={(val) => handleSelectChange('manager', val === 'none' ? '' : val)}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select Manager" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">None</SelectItem>
+                                        {managerOptions.map((m) => (
+                                            <SelectItem key={m.id} value={m.id}>{m.firstName} {m.lastName} ({m.id})</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
                                 <Label htmlFor="salary">Annual Salary</Label>
                                 <Input id="salary" name="salary" type="number" value={formData.salary} onChange={handleChange} required />
                             </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="status">Status</Label>
-                                <Select defaultValue="Active" onValueChange={(val) => handleSelectChange('status', val)}>
+                                <Select value={formData.status} onValueChange={(val) => handleSelectChange('status', val)}>
                                     <SelectTrigger>
                                         <SelectValue placeholder="Status" />
                                     </SelectTrigger>
                                     <SelectContent>
+                                        <SelectItem value="Onboarding">Onboarding</SelectItem>
                                         <SelectItem value="Active">Active</SelectItem>
                                         <SelectItem value="Probation">Probation</SelectItem>
                                         <SelectItem value="Notice Period">Notice Period</SelectItem>
                                     </SelectContent>
                                 </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Options</Label>
+                                <Input value={loadingOptions ? 'Loading options...' : 'Ready'} disabled />
                             </div>
                         </div>
 
@@ -153,6 +273,44 @@ export default function CreateEmployeePage() {
                     </CardFooter>
                 </form>
             </Card>
+
+            <Dialog open={isDeptDialogOpen} onOpenChange={setIsDeptDialogOpen}>
+                <DialogContent className="sm:max-w-[480px]">
+                    <DialogHeader>
+                        <DialogTitle>Add department</DialogTitle>
+                        <DialogDescription>Create a new department for HRMS.</DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-2 py-2">
+                        <Label>Department name</Label>
+                        <Input value={newDeptName} onChange={(e) => setNewDeptName(e.target.value)} placeholder="e.g. Customer Success" />
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" type="button" onClick={() => setIsDeptDialogOpen(false)}>Cancel</Button>
+                        <Button type="button" onClick={handleAddDepartment} disabled={!newDeptName.trim()}>
+                            Add
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={isRoleDialogOpen} onOpenChange={setIsRoleDialogOpen}>
+                <DialogContent className="sm:max-w-[480px]">
+                    <DialogHeader>
+                        <DialogTitle>Add role</DialogTitle>
+                        <DialogDescription>Create a new job role for HRMS.</DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-2 py-2">
+                        <Label>Role name</Label>
+                        <Input value={newRoleName} onChange={(e) => setNewRoleName(e.target.value)} placeholder="e.g. Senior Developer" />
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" type="button" onClick={() => setIsRoleDialogOpen(false)}>Cancel</Button>
+                        <Button type="button" onClick={handleAddRole} disabled={!newRoleName.trim()}>
+                            Add
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

@@ -85,6 +85,19 @@ class PosService {
             ...invoiceData
         };
         invoices.unshift(newInvoice);
+
+        // Connect to accounting
+        try {
+            const { accountingService } = await import('./accountingService');
+            await accountingService.recordPosSale({
+                ...newInvoice,
+                total: newInvoice.total || newInvoice.subtotal,
+                customerName: newInvoice.client?.name || 'Walk-in'
+            });
+        } catch (error) {
+            console.error('Failed to sync with accounting:', error);
+        }
+
         return newInvoice;
     }
 
