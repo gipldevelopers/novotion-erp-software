@@ -301,7 +301,7 @@ export default function CRMCalendarPage() {
                 </div>
             </div>
 
-            <Card className="flex-1 flex flex-col overflow-hidden shadow-md border-0 bg-background/50 backdrop-blur supports-[backdrop-filter]:bg-background/50">
+            <Card className="flex-1 flex flex-col overflow-scroll shadow-md border-0 bg-background/50 backdrop-blur supports-[backdrop-filter]:bg-background/50">
                 <div className="grid grid-cols-7 border-b text-center py-3 bg-muted/30 font-semibold text-sm">
                     {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => <div key={d}>{d}</div>)}
                 </div>

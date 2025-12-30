@@ -1,5 +1,5 @@
 // Updated: 2025-12-27
-import { customers, leads, activities, tasks, communications, kpimetrics, invoices, payments } from './crmMockData';
+import { customers, leads, activities, tasks, communications, kpimetrics, invoices, payments, quotations, contracts } from './crmMockData';
 
 // Simulating API delay
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -34,6 +34,26 @@ class CRMService {
         return newCustomer;
     }
 
+    async updateCustomer(id, customerData) {
+        await delay(600);
+        const index = customers.findIndex(c => c.id === id);
+        if (index !== -1) {
+            customers[index] = { ...customers[index], ...customerData };
+            return customers[index];
+        }
+        return null; // or throw error
+    }
+
+    async deleteCustomer(id) {
+        await delay(500);
+        const index = customers.findIndex(c => c.id === id);
+        if (index !== -1) {
+            customers.splice(index, 1);
+            return true;
+        }
+        return false;
+    }
+
     async getLeads() {
         await delay(600);
         return [...leads];
@@ -60,8 +80,12 @@ class CRMService {
             id: `LEAD-${Math.floor(Math.random() * 1000)}`,
             createdAt: new Date().toISOString().split('T')[0],
             assignedTo: 'Admin User',
+            score: Math.floor(Math.random() * 100), // Lead Scoring
+            probability: Math.floor(Math.random() * 100), // Closing Probability
+            expectedRevenue: 0,
             ...leadData,
         };
+        leads.push(newLead);
         return newLead;
     }
 
@@ -149,6 +173,58 @@ class CRMService {
         // Add to beginning of array to simulate latest first
         communications.unshift(newEmail);
         return newEmail;
+    }
+
+    async getQuotations() {
+        await delay(500);
+        return [...quotations];
+    }
+
+    async getQuotationById(id) {
+        await delay(300);
+        return quotations.find(q => q.id === id) || null;
+    }
+
+    async createQuotation(data) {
+        await delay(800);
+        const newQuote = {
+            id: `QT-${Math.floor(Math.random() * 10000)}`,
+            status: 'Draft',
+            date: new Date().toISOString(),
+            version: 1,
+            ...data
+        };
+        quotations.unshift(newQuote);
+        return newQuote;
+    }
+
+    async updateQuotationStatus(id, status) {
+        await delay(400);
+        const quote = quotations.find(q => q.id === id);
+        if (quote) {
+            quote.status = status;
+            return { ...quote };
+        }
+        return null;
+    }
+
+    async getContracts(customerId = null) {
+        await delay(500);
+        if (customerId) {
+            return contracts.filter(c => c.customerId === customerId);
+        }
+        return [...contracts];
+    }
+
+    async createContract(data) {
+        await delay(700);
+        const newContract = {
+            id: `CTR-${Math.floor(Math.random() * 10000)}`,
+            status: 'Active',
+            ...data
+        };
+        contracts.push(newContract);
+        return newContract;
     }
 }
 

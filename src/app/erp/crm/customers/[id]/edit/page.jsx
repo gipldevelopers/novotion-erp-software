@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { crmService } from '@/services/crmService';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -10,12 +10,15 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Loader2, Save } from 'lucide-react';
+import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
-export default function CreateCustomerPage() {
+export default function EditCustomerPage() {
+    const params = useParams();
     const router = useRouter();
+    const customerId = params.id;
 
+    const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
@@ -29,6 +32,41 @@ export default function CreateCustomerPage() {
         industry: '',
         notes: ''
     });
+
+    useEffect(() => {
+        if (customerId) {
+            fetchCustomer();
+        }
+    }, [customerId]);
+
+    const fetchCustomer = async () => {
+        try {
+            setLoading(true);
+            const data = await crmService.getCustomerById(customerId);
+            if (data) {
+                setFormData({
+                    name: data.name || '',
+                    email: data.email || '',
+                    phone: data.phone || '',
+                    company: data.company || '',
+                    role: data.role || '',
+                    type: data.type || 'SMB',
+                    status: data.status || 'Active',
+                    address: data.address || '',
+                    industry: data.industry || '',
+                    notes: data.notes || ''
+                });
+            } else {
+                toast.error('Customer not found');
+                router.push('/erp/crm/customers');
+            }
+        } catch (error) {
+            console.error('Failed to fetch customer', error);
+            toast.error('Failed to load customer details');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -44,17 +82,24 @@ export default function CreateCustomerPage() {
 
         try {
             setSaving(true);
-            const newCustomer = await crmService.createCustomer(formData);
-            toast.success('Customer created successfully');
-            // Redirect to the new customer's detail page
-            router.push(`/erp/crm/customers/${newCustomer.id}`);
+            await crmService.updateCustomer(customerId, formData);
+            toast.success('Customer updated successfully');
+            router.push(`/erp/crm/customers/${customerId}`);
         } catch (error) {
-            console.error('Failed to create customer', error);
-            toast.error('Failed to create customer');
+            console.error('Failed to update customer', error);
+            toast.error('Failed to update customer');
         } finally {
             setSaving(false);
         }
     };
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-background p-6 space-y-6">
@@ -63,8 +108,8 @@ export default function CreateCustomerPage() {
                     <ArrowLeft className="h-4 w-4" />
                 </Button>
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight">Create Customer</h1>
-                    <p className="text-muted-foreground">Add a new customer to your CRM.</p>
+                    <h1 className="text-2xl font-bold tracking-tight">Edit Customer</h1>
+                    <p className="text-muted-foreground">Update customer details and preferences.</p>
                 </div>
             </div>
 
@@ -87,7 +132,6 @@ export default function CreateCustomerPage() {
                                             value={formData.name}
                                             onChange={handleChange}
                                             required
-                                            placeholder="John Doe"
                                         />
                                     </div>
                                     <div className="space-y-2">
@@ -98,7 +142,6 @@ export default function CreateCustomerPage() {
                                             value={formData.company}
                                             onChange={handleChange}
                                             required
-                                            placeholder="Acme Inc."
                                         />
                                     </div>
                                 </div>
@@ -113,7 +156,6 @@ export default function CreateCustomerPage() {
                                             value={formData.email}
                                             onChange={handleChange}
                                             required
-                                            placeholder="john@example.com"
                                         />
                                     </div>
                                     <div className="space-y-2">
@@ -123,7 +165,6 @@ export default function CreateCustomerPage() {
                                             name="phone"
                                             value={formData.phone}
                                             onChange={handleChange}
-                                            placeholder="+1 (555) 000-0000"
                                         />
                                     </div>
                                 </div>
@@ -143,7 +184,6 @@ export default function CreateCustomerPage() {
                                         value={formData.address}
                                         onChange={handleChange}
                                         rows={3}
-                                        placeholder="123 Main St, City, Country"
                                     />
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
@@ -227,7 +267,7 @@ export default function CreateCustomerPage() {
                                 <div className="flex flex-col gap-2">
                                     <Button type="submit" disabled={saving}>
                                         {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                        Create Customer
+                                        Save Changes
                                     </Button>
                                     <Button variant="outline" type="button" onClick={() => router.back()}>
                                         Cancel

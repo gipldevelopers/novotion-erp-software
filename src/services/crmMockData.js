@@ -229,48 +229,76 @@ export const communications = [
         content: 'Discussed blocking issues with dev team.',
         from: 'Bob Smith',
         to: 'me@company.com',
-        date: '2024-12-25T09:00:00',
-        read: true,
+    },
+    { id: 'COMM-1', type: 'Email', from: 'rahul@alpha.com', to: 'me@company.com', subject: 'Re: Inquiry', content: 'Checking regarding the previous inquiry.', date: '2024-12-20T10:30:00', read: true },
+    { id: 'COMM-2', type: 'WhatsApp', from: '+91 9988776655', to: 'Company WA', content: 'Can you send the brochure?', date: '2024-12-21T15:45:00', read: false },
+];
+
+export const invoices = [
+    {
+        id: 'INV-2024-001',
+        customerId: 'CUST-001',
+        date: '2024-12-15',
+        dueDate: '2025-01-14',
+        amount: 5000,
+        status: 'Unpaid',
+        items: [{ description: 'Consulting Services', quantity: 10, rate: 500 }]
+    },
+    {
+        id: 'INV-2024-002',
+        customerId: 'CUST-001',
+        date: '2024-11-20',
+        dueDate: '2024-12-20',
+        amount: 2500,
+        status: 'Paid',
+        items: [{ description: 'Support Package', quantity: 1, rate: 2500 }]
     }
 ];
 
-export const kpimetrics = {
-    totalRevenue: 245000,
-    activeLeads: 45,
-    conversionRate: 12.5,
-    customerSatisfaction: 4.8,
-    revenueTrend: [
-        { name: 'Jan', value: 4000 },
-        { name: 'Feb', value: 3000 },
-        { name: 'Mar', value: 2000 },
-        { name: 'Apr', value: 2780 },
-        { name: 'May', value: 1890 },
-        { name: 'Jun', value: 2390 },
-        { name: 'Jul', value: 3490 },
-        { name: 'Aug', value: 4000 },
-        { name: 'Sep', value: 5000 },
-        { name: 'Oct', value: 6000 },
-        { name: 'Nov', value: 7500 },
-        { name: 'Dec', value: 8900 },
-    ],
-    salesFunnel: [
-        { name: 'New', value: 20 },
-        { name: 'Qualified', value: 15 },
-        { name: 'Proposal', value: 8 },
-        { name: 'Negotiation', value: 5 },
-        { name: 'Closed', value: 3 },
-    ]
-};
-// ... (existing exports)
-
-export const invoices = [
-    { id: 'INV-001', customerId: 'CUST-001', amount: 5000, status: 'Paid', date: '2024-12-01', dueDate: '2024-12-15' },
-    { id: 'INV-002', customerId: 'CUST-001', amount: 2500, status: 'Pending', date: '2024-12-20', dueDate: '2025-01-05' },
-    { id: 'INV-003', customerId: 'CUST-002', amount: 12000, status: 'Overdue', date: '2024-11-15', dueDate: '2024-11-30' },
-    { id: 'INV-004', customerId: 'CUST-004', amount: 3500, status: 'Paid', date: '2024-12-10', dueDate: '2024-12-24' },
+export const payments = [
+    {
+        id: 'PAY-001',
+        customerId: 'CUST-001',
+        invoiceId: 'INV-2024-002',
+        date: '2024-12-18',
+        amount: 2500,
+        method: 'Bank Transfer'
+    }
+];
+export const quotations = [
+    {
+        id: 'QT-1001',
+        customerId: 'CUST-001',
+        customerName: 'Alice Freeman',
+        date: '2024-12-28T10:00:00',
+        validUntil: '2025-01-28T10:00:00',
+        status: 'Sent',
+        subtotal: 5000,
+        taxTotal: 900,
+        totalAmount: 5900,
+        items: [
+            { description: 'Consulting Services', quantity: 10, rate: 500, amount: 5000 }
+        ],
+        version: 1
+    }
 ];
 
-export const payments = [
-    { id: 'PAY-001', customerId: 'CUST-001', invoiceId: 'INV-001', amount: 5000, method: 'Bank Transfer', date: '2024-12-14' },
-    { id: 'PAY-002', customerId: 'CUST-004', invoiceId: 'INV-004', amount: 3500, method: 'Credit Card', date: '2024-12-23' },
+export const contracts = [
+    {
+        id: 'CTR-5001',
+        title: 'Annual Maintenance Contract',
+        customerId: 'CUST-001',
+        type: 'AMC',
+        value: 12000,
+        startDate: '2024-01-01',
+        endDate: '2024-12-31',
+        status: 'Active'
+    }
+];
+
+export const kpimetrics = [
+    { title: 'Total Revenue', value: '$12,345', trend: '+12%' },
+    { title: 'Active Leads', value: '45', trend: '+5%' },
+    { title: 'Win Rate', value: '68%', trend: '+2%' },
+    { title: 'Avg Deal Size', value: '$2,400', trend: '-1%' }
 ];

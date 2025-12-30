@@ -69,6 +69,9 @@ const getNavigation = (user) => {
       children: [
         { title: 'Customers', href: '/erp/crm/customers', icon: Users, permission: 'customers.view' },
         { title: 'Leads', href: '/erp/crm/leads', icon: UserPlus, permission: 'leads.view' },
+        { title: 'Opportunities', href: '/erp/crm/opportunities', icon: Briefcase, permission: 'crm.view' },
+        { title: 'Quotations', href: '/erp/crm/quotations', icon: FileText, permission: 'quotations.view' },
+        { title: 'Contracts', href: '/erp/crm/contracts', icon: Shield, permission: 'contracts.view' },
         { title: 'Activities', href: '/erp/crm/activities', icon: Activity, permission: 'crm.view' },
         { title: 'Tasks', href: '/erp/crm/tasks', icon: ListTodo, permission: 'crm.view' },
         { title: 'Comms', href: '/erp/crm/communications', icon: MessageSquare, permission: 'crm.view' },

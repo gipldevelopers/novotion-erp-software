@@ -13,6 +13,8 @@ const rolePermissions = {
         'crm.view', 'crm.create', 'crm.edit', 'crm.delete',
         'customers.view', 'customers.create', 'customers.edit', 'customers.delete',
         'leads.view', 'leads.create', 'leads.edit', 'leads.delete',
+        'quotations.view', 'quotations.create', 'quotations.edit', 'quotations.delete', // Added quotations permissions
+        'contracts.view', 'contracts.create', 'contracts.edit', 'contracts.delete', // Added contracts permissions
         'activities.view', 'activities.create', 'activities.edit', 'activities.delete',
         'tasks.view', 'tasks.create', 'tasks.edit', 'tasks.delete',
         'communications.view', 'communications.create', 'communications.edit', 'communications.delete',
@@ -47,6 +49,8 @@ const rolePermissions = {
         'crm.view', 'crm.create', 'crm.edit',
         'customers.view', 'customers.create', 'customers.edit',
         'leads.view', 'leads.create', 'leads.edit',
+        'quotations.view', 'quotations.create', 'quotations.edit', // Manager permissions
+        'contracts.view', 'contracts.create', 'contracts.edit',
         'activities.view', 'tasks.view', 'communications.view',
         'hrms.view',
         'employees.view',
@@ -72,16 +76,18 @@ const rolePermissions = {
         'hrms.view', 'hrms.create', 'hrms.edit',
         'employees.view', 'employees.create', 'employees.edit',
         'attendance.view', 'attendance.create', 'attendance.edit',
-        'leaves.view', 'leaves.create', 'leaves.edit', // Added leaves
+        'leaves.view', 'leaves.create', 'leaves.edit',
         'payroll.view', 'payroll.create', 'payroll.edit',
-        'performance.view', 'performance.create', 'performance.edit', // Added performance
-        'hrms_reports.view', // Added reports
+        'performance.view', 'performance.create', 'performance.edit',
+        'hrms_reports.view',
     ],
     sales: [
         'dashboard.view',
         'crm.view', 'crm.create', 'crm.edit',
         'customers.view', 'customers.create', 'customers.edit',
         'leads.view', 'leads.create', 'leads.edit',
+        'quotations.view', 'quotations.create', 'quotations.edit', // Sales permissions
+        'contracts.view', 'contracts.create', 'contracts.edit',
         'activities.view', 'activities.create', 'activities.edit',
         'tasks.view', 'tasks.create', 'tasks.edit',
         'communications.view', 'communications.create', 'communications.edit',
@@ -95,7 +101,7 @@ const rolePermissions = {
         'customers.view', 'customers.create',
         'invoices.view', 'invoices.edit', 'invoices.delete',
         'payments.view', 'payments.create',
-        'sessions.view', // Can view their own sessions
+        'sessions.view',
         'returns.view',
     ],
     viewer: [
@@ -109,6 +115,8 @@ const rolePermissions = {
         'crm.view',
         'customers.view',
         'leads.view',
+        'quotations.view', // Viewer permissions
+        'contracts.view',
         'activities.view',
         'tasks.view',
         'communications.view',

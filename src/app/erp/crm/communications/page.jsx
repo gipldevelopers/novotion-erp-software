@@ -157,7 +157,7 @@ export default function CommunicationsPage() {
                                     {comm.subject}
                                 </div>
                                 <div className="line-clamp-2 text-xs text-muted-foreground w-full">
-                                    {comm.content.substring(0, 300)}
+                                    {comm.content?.substring(0, 300) || ''}
                                 </div>
                             </button>
                         ))}
