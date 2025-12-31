@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Calculator, FileText, CreditCard, BookOpen, Receipt, PieChart, Users, UserPlus, Contact, Briefcase, Calendar, Wallet, ShoppingCart, ReceiptText, Settings, Shield, Lock, ChevronDown, ChevronLeft, ChevronRight, LogOut, X, Activity, ListTodo, MessageSquare, LayoutGrid, Clock, DollarSign, TrendingUp, Package } from 'lucide-react';
+import { LayoutDashboard, Calculator, FileText, CreditCard, BookOpen, Receipt, PieChart, Users, UserPlus, Contact, Briefcase, Calendar, Wallet, ShoppingCart, ReceiptText, Settings, Shield, Lock, ChevronDown, ChevronLeft, ChevronRight, LogOut, X, Activity, ListTodo, MessageSquare, LayoutGrid, Clock, DollarSign, TrendingUp, Package, Building2, Repeat, FileCheck, Landmark, UserCheck, BarChart3, FileSpreadsheet, Coins, ArrowRightLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/authStore';
 import { useSidebarStore } from '@/stores/sidebarStore';
@@ -55,11 +55,18 @@ const getNavigation = (user) => {
       permission: 'accounting.view',
       children: [
         { title: 'Dashboard', href: '/erp/accounting/dashboard', icon: PieChart, permission: 'accounting.view' },
+        { title: 'Chart of Accounts', href: '/erp/accounting/chart-of-accounts', icon: LayoutGrid, permission: 'accounting.view' },
         { title: 'Invoices', href: '/erp/accounting/invoices', icon: FileText, permission: 'invoices.view' },
+        { title: 'Recurring Invoices', href: '/erp/accounting/invoices/recurring', icon: Repeat, permission: 'invoices.view' },
         { title: 'Payments', href: '/erp/accounting/payments', icon: CreditCard, permission: 'payments.view' },
-        { title: 'Ledgers', href: '/erp/accounting/ledgers', icon: BookOpen, permission: 'ledgers.view' },
+        { title: 'Payment Gateways', href: '/erp/accounting/payments/gateways', icon: Landmark, permission: 'payments.view' },
+        { title: 'Reconciliation', href: '/erp/accounting/payments/reconciliation', icon: ArrowRightLeft, permission: 'payments.view' },
+        { title: 'Vendors', href: '/erp/accounting/vendors', icon: Building2, permission: 'accounting.view' },
         { title: 'Expenses', href: '/erp/accounting/expenses', icon: Receipt, permission: 'expenses.view' },
-        { title: 'Reports', href: '/erp/accounting/reports', icon: PieChart, permission: 'reports.view' },
+        { title: 'Expense Approvals', href: '/erp/accounting/expenses/approvals', icon: FileCheck, permission: 'expenses.view' },
+        { title: 'Taxation', href: '/erp/accounting/taxation', icon: Coins, permission: 'accounting.view' },
+        { title: 'Ledgers', href: '/erp/accounting/ledgers', icon: BookOpen, permission: 'ledgers.view' },
+        { title: 'Reports', href: '/erp/accounting/reports', icon: BarChart3, permission: 'reports.view' },
       ],
     },
     {
