@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { accountingService } from '@/services/accountingService';
+import { toast } from 'sonner';
 
 export default function RecurringInvoicesPage() {
     const router = useRouter();
@@ -52,7 +53,20 @@ export default function RecurringInvoicesPage() {
     const toggleStatus = async (id, currentStatus) => {
         const newStatus = currentStatus === 'active' ? 'paused' : 'active';
         await accountingService.updateRecurringInvoice(id, { status: newStatus });
+        toast.success(`Template ${newStatus === 'active' ? 'activated' : 'paused'}`);
         loadInvoices();
+    };
+
+    const handleDelete = async (id) => {
+        if (window.confirm('Are you sure you want to delete this recurring template?')) {
+            try {
+                await accountingService.deleteRecurringInvoice(id);
+                toast.success('Template deleted successfully');
+                loadInvoices();
+            } catch (error) {
+                toast.error('Failed to delete template');
+            }
+        }
     };
 
     const getFrequencyBadge = (frequency) => {
@@ -243,7 +257,7 @@ export default function RecurringInvoicesPage() {
                                                 </>
                                             )}
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem className="text-destructive">
+                                        <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(invoice.id)}>
                                             <Trash2 className="h-4 w-4 mr-2" />
                                             Delete
                                         </DropdownMenuItem>

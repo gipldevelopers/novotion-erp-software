@@ -299,6 +299,16 @@ class AccountingService {
         return null;
     }
 
+    async deleteRecurringInvoice(id) {
+        await delay(400);
+        const index = recurringInvoices.findIndex(ri => ri.id === id);
+        if (index !== -1) {
+            recurringInvoices.splice(index, 1);
+            return true;
+        }
+        return false;
+    }
+
     // Payment Gateway Methods
     async getPaymentGateways() {
         await delay(300);
