@@ -545,6 +545,7 @@ class HRMSService {
             location: data.location || null,
             workMode: data.workMode || 'office',
             device: data.device || 'web',
+            ...data // Allow overriding defaults
         };
 
         db.attendance.unshift(clockInRecord);
@@ -558,6 +559,7 @@ class HRMSService {
         const today = todayISO();
 
         // Find today's clock-in record
+        // If employeeId is provided, look for that employee's active session
         const recordIndex = db.attendance.findIndex(
             (a) => a.employeeId === data.employeeId && a.date === today && !a.checkOut
         );
@@ -580,6 +582,52 @@ class HRMSService {
 
         this._persist();
         return { ...db.attendance[recordIndex] };
+    }
+
+    async updateAttendance(id, updates) {
+        await delay(300);
+        const db = this._requireDb();
+        const index = db.attendance.findIndex(a => a.id === id);
+
+        if (index === -1) return null;
+
+        // Update the record
+        db.attendance[index] = {
+            ...db.attendance[index],
+            ...updates
+        };
+
+        // Recalculate hours if checkIn/checkOut changed
+        const record = db.attendance[index];
+        if (record.checkIn && record.checkOut) {
+            const checkIn = new Date(`2000-01-01T${record.checkIn}`);
+            const checkOut = new Date(`2000-01-01T${record.checkOut}`);
+            const diffMs = checkOut - checkIn;
+            // Handle cross-midnight if needed, but for now assuming same day or next day handling elsewhere
+            // Simple hour diff
+            let hours = diffMs / (1000 * 60 * 60);
+
+            // Adjust for break deductions (1 hour if work > 6 hours)
+            if (updates.breakDeduction !== undefined) {
+                hours -= updates.breakDeduction;
+            } else if (hours > 6) {
+                hours -= 1;
+            }
+
+            // Apply manual adjustments (use update OR existing)
+            const adjustment = updates.adjustmentHours !== undefined ? parseFloat(updates.adjustmentHours) : (parseFloat(record.adjustmentHours) || 0);
+            hours += adjustment;
+
+            // Store the merged adjustment back to the record if it wasn't in updates
+            if (updates.adjustmentHours === undefined && record.adjustmentHours) {
+                db.attendance[index].adjustmentHours = record.adjustmentHours;
+            }
+
+            db.attendance[index].hours = Math.max(0, hours).toFixed(2);
+        }
+
+        this._persist();
+        return { ...db.attendance[index] };
     }
 
     // Leave Balance

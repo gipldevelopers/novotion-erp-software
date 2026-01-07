@@ -8,41 +8,41 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { 
-  Search, 
-  Calendar, 
-  FileDown, 
-  MapPin, 
-  Home, 
-  Clock, 
-  Smartphone, 
-  Monitor,
-  Settings,
-  Filter,
-  Users,
-  AlertCircle,
-  TrendingUp,
-  TrendingDown,
-  Target,
-  BarChart3,
-  Eye,
-  Edit,
-  MoreVertical,
-  Download,
-  RefreshCw,
-  Shield,
-  Wifi,
-  Map,
-  Building,
-  Coffee,
-  Zap,
-  Moon,
-  Sun,
-  Calculator,
-  UserCheck,
-  Clock4,
-  Briefcase,
-  Navigation
+import {
+    Search,
+    Calendar,
+    FileDown,
+    MapPin,
+    Home,
+    Clock,
+    Smartphone,
+    Monitor,
+    Settings,
+    Filter,
+    Users,
+    AlertCircle,
+    TrendingUp,
+    TrendingDown,
+    Target,
+    BarChart3,
+    Eye,
+    Edit,
+    MoreVertical,
+    Download,
+    RefreshCw,
+    Shield,
+    Wifi,
+    Map,
+    Building,
+    Coffee,
+    Zap,
+    Moon,
+    Sun,
+    Calculator,
+    UserCheck,
+    Clock4,
+    Briefcase,
+    Navigation
 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -50,28 +50,44 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { 
-  LineChart, 
-  Line, 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import {
+    Sheet,
+    SheetContent,
+    SheetDescription,
+    SheetHeader,
+    SheetTitle,
+} from "@/components/ui/sheet";
+import { Textarea } from "@/components/ui/textarea";
+import {
+    LineChart,
+    Line,
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    Legend,
+    ResponsiveContainer,
+    PieChart,
+    Pie,
+    Cell
 } from 'recharts';
 
 export default function AdvancedAttendancePage() {
@@ -93,7 +109,7 @@ export default function AdvancedAttendancePage() {
         overtime: 0,
         totalHours: 0
     });
-    
+
     // Rules Configuration
     const [lateArrivalRules, setLateArrivalRules] = useState({
         gracePeriod: 15, // minutes
@@ -102,22 +118,22 @@ export default function AdvancedAttendancePage() {
         autoDeduct: true,
         notifyManager: true
     });
-    
+
     const [overtimeRules, setOvertimeRules] = useState({
-        dailyThreshold: 9, // hours
+        dailyThreshold: 8, // hours
         weeklyThreshold: 45, // hours
         rateMultiplier: 1.5,
         approvalRequired: true,
         autoCalculate: true
     });
-    
+
     const [geoFenceRules, setGeoFenceRules] = useState({
         radius: 500, // meters
         officeLocation: { lat: 40.7128, lng: -74.0060 },
         allowRemoteCheckin: true,
         strictMode: false
     });
-    
+
     // UI State
     const [searchTerm, setSearchTerm] = useState('');
     const [dateRange, setDateRange] = useState({
@@ -127,17 +143,77 @@ export default function AdvancedAttendancePage() {
     const [filterStatus, setFilterStatus] = useState('all');
     const [filterWorkMode, setFilterWorkMode] = useState('all');
     const [filterShift, setFilterShift] = useState('all');
-    
+
+    // Advanced Features State
+    const [selectedRecord, setSelectedRecord] = useState(null);
+    const [isEditOpen, setIsEditOpen] = useState(false);
+    const [isViewOpen, setIsViewOpen] = useState(false);
+    const [editForm, setEditForm] = useState({
+        checkIn: '',
+        checkOut: '',
+        status: '',
+        notes: '',
+        adjustmentHours: 0,
+        adjustmentReason: ''
+    });
+
+    const handleEditClick = (record) => {
+        setSelectedRecord(record);
+        setEditForm({
+            checkIn: record.checkIn || '',
+            checkOut: record.checkOut || '',
+            status: record.status || 'Present',
+            notes: record.notes || '',
+            adjustmentHours: record.adjustmentHours || 0,
+            adjustmentReason: record.adjustmentReason || ''
+        });
+        setIsEditOpen(true);
+    };
+
+    const handleViewClick = (record) => {
+        setSelectedRecord(record);
+        setIsViewOpen(true);
+    };
+
+    const handleUpdateAttendance = async () => {
+        if (!selectedRecord) return;
+        try {
+            await hrmsService.updateAttendance(selectedRecord.id, editForm);
+            setIsEditOpen(false);
+            fetchAttendanceData();
+            alert('Attendance record updated successfully');
+        } catch (error) {
+            console.error('Failed to update attendance:', error);
+            alert('Failed to update attendance');
+        }
+    };
+
+    // Calculate preview hours for edit form
+    const previewHours = useMemo(() => {
+        if (!editForm.checkIn || !editForm.checkOut) return 0;
+        const start = new Date(`2000-01-01T${editForm.checkIn}`);
+        const end = new Date(`2000-01-01T${editForm.checkOut}`);
+        let hours = (end - start) / (1000 * 60 * 60);
+        if (hours < 0) hours += 24; // Handle overnight
+
+        // Deduct break (simple logic matching service)
+        if (hours > 6) hours -= 1;
+
+        return (hours + parseFloat(editForm.adjustmentHours || 0)).toFixed(2);
+    }, [editForm.checkIn, editForm.checkOut, editForm.adjustmentHours]);
+
+
+
     // Fetch Data
     useEffect(() => {
         fetchAttendanceData();
-        
+
         // Get user location for geo-fencing
         getUserLocation();
-        
+
         // Set up auto-refresh every 5 minutes
         const refreshInterval = setInterval(fetchAttendanceData, 5 * 60 * 1000);
-        
+
         return () => clearInterval(refreshInterval);
     }, []);
 
@@ -157,17 +233,17 @@ export default function AdvancedAttendancePage() {
                 hrmsService.getAttendance(),
                 hrmsService.getEmployees?.() || Promise.resolve([])
             ]);
-            
+
             // Process attendance data with advanced calculations
             const processedAttendance = processAttendanceData(attendanceData);
-            
+
             setAttendance(processedAttendance);
             setEmployees(employeesData);
-            
+
             // Load demo shifts if API not available
             loadShiftsData();
             loadRostersData();
-            
+
         } catch (error) {
             console.error('Failed to fetch data:', error);
             loadDemoData();
@@ -182,22 +258,22 @@ export default function AdvancedAttendancePage() {
             // Assign shift and calculate times
             const shift = getShiftForEmployee(record.employeeId);
             const calculated = calculateWorkDetails(record, shift);
-            
+
             // Determine work mode
             const workMode = determineWorkMode(record, shift);
-            
+
             // Calculate overtime details
             const overtimeDetails = calculateOvertimeDetails(record, shift);
-            
+
             // Calculate late/early arrival
             const arrivalDetails = calculateArrivalDetails(record, shift);
-            
+
             // Geo-fencing validation
             const geoValidation = validateGeoFencing(record);
-            
+
             // IP validation
             const ipValidation = validateIPAddress(record);
-            
+
             // Comprehensive record
             return {
                 ...record,
@@ -222,15 +298,21 @@ export default function AdvancedAttendancePage() {
         if (!record.checkIn || !record.checkOut) {
             return { totalHours: 0, breakHours: 0, netHours: 0 };
         }
-        
+
         const checkIn = new Date(`2000-01-01T${record.checkIn}`);
         const checkOut = new Date(`2000-01-01T${record.checkOut}`);
+
         let totalMinutes = (checkOut - checkIn) / (1000 * 60);
-        
+
+        // Add adjustment hours (convert hours to minutes)
+        if (record.adjustmentHours) {
+            totalMinutes += parseFloat(record.adjustmentHours) * 60;
+        }
+
         // Deduct break time (1 hour if work > 6 hours)
         const breakMinutes = totalMinutes > 360 ? 60 : 0;
         const netMinutes = totalMinutes - breakMinutes;
-        
+
         return {
             totalHours: (totalMinutes / 60).toFixed(2),
             breakHours: (breakMinutes / 60).toFixed(2),
@@ -244,13 +326,13 @@ export default function AdvancedAttendancePage() {
     const determineWorkMode = (record, shift) => {
         // Check if remote work was approved
         const isRemoteApproved = record.workFromHomeRequest?.approved || false;
-        
+
         // Check if within office hours
         const isWithinOfficeHours = isWithinShiftHours(record, shift);
-        
+
         // Check location
         const isInOffice = validateGeoFencing(record).isWithinGeoFence;
-        
+
         if (isRemoteApproved && !isInOffice) {
             return { type: 'remote', subtype: 'approved', verified: true };
         } else if (!isInOffice && isWithinOfficeHours) {
@@ -258,7 +340,7 @@ export default function AdvancedAttendancePage() {
         } else if (isInOffice) {
             return { type: 'office', subtype: 'onsite', verified: true };
         }
-        
+
         return { type: 'unknown', subtype: 'unknown', verified: false };
     };
 
@@ -266,24 +348,24 @@ export default function AdvancedAttendancePage() {
     const calculateOvertimeDetails = (record, shift) => {
         const netHours = parseFloat(calculateWorkDetails(record, shift).netHours);
         const shiftHours = shift?.hours || 8;
-        
+
         let overtime = 0;
         let overtimeType = 'none';
         let overtimeRate = overtimeRules.rateMultiplier;
         let overtimeAmount = 0;
-        
+
         if (netHours > overtimeRules.dailyThreshold) {
             overtime = netHours - overtimeRules.dailyThreshold;
             overtimeType = netHours > 12 ? 'double' : 'single';
             overtimeRate = overtimeType === 'double' ? 2.0 : overtimeRules.rateMultiplier;
             overtimeAmount = overtime * overtimeRate * (record.hourlyRate || 25);
         }
-        
+
         // Check weekly overtime
         const weeklyHours = calculateWeeklyHours(record.employeeId);
-        const weeklyOvertime = weeklyHours > overtimeRules.weeklyThreshold ? 
+        const weeklyOvertime = weeklyHours > overtimeRules.weeklyThreshold ?
             weeklyHours - overtimeRules.weeklyThreshold : 0;
-        
+
         return {
             overtime: parseFloat(overtime.toFixed(2)),
             overtimeType,
@@ -298,27 +380,27 @@ export default function AdvancedAttendancePage() {
     // Calculate arrival details with precision
     const calculateArrivalDetails = (record, shift) => {
         if (!record.checkIn || !shift?.startTime) {
-            return { 
-                isLate: false, 
-                isEarly: false, 
-                lateMinutes: 0, 
+            return {
+                isLate: false,
+                isEarly: false,
+                lateMinutes: 0,
                 earlyMinutes: 0,
                 arrivalStatus: 'no_checkin'
             };
         }
-        
+
         const checkIn = new Date(`2000-01-01T${record.checkIn}`);
         const shiftStart = new Date(`2000-01-01T${shift.startTime}`);
         const graceTime = new Date(shiftStart.getTime() + lateArrivalRules.gracePeriod * 60000);
-        
+
         const minutesDifference = (checkIn - shiftStart) / (1000 * 60);
-        
+
         let isLate = false;
         let isEarly = false;
         let lateMinutes = 0;
         let earlyMinutes = 0;
         let arrivalStatus = 'on_time';
-        
+
         if (checkIn > graceTime) {
             isLate = true;
             lateMinutes = Math.round(minutesDifference - lateArrivalRules.gracePeriod);
@@ -328,7 +410,7 @@ export default function AdvancedAttendancePage() {
             earlyMinutes = Math.round(Math.abs(minutesDifference));
             arrivalStatus = 'early';
         }
-        
+
         return {
             isLate,
             isEarly,
@@ -342,23 +424,23 @@ export default function AdvancedAttendancePage() {
     // Validate geo-fencing with detailed tracking
     const validateGeoFencing = (record) => {
         if (!geoFenceEnabled || !record.coordinates) {
-            return { 
-                isWithinGeoFence: true, 
+            return {
+                isWithinGeoFence: true,
                 distanceFromOffice: 0,
                 locationVerified: false,
                 locationAccuracy: 'N/A'
             };
         }
-        
+
         const distance = calculateDistance(
             record.coordinates.lat,
             record.coordinates.lng,
             geoFenceRules.officeLocation.lat,
             geoFenceRules.officeLocation.lng
         );
-        
+
         const isWithin = distance <= geoFenceRules.radius;
-        
+
         return {
             isWithinGeoFence: isWithin,
             distanceFromOffice: parseFloat(distance.toFixed(2)),
@@ -371,16 +453,16 @@ export default function AdvancedAttendancePage() {
     // Validate IP address
     const validateIPAddress = (record) => {
         if (!ipRestrictionEnabled || !record.ipAddress) {
-            return { 
-                isValidIP: true, 
+            return {
+                isValidIP: true,
                 ipType: 'N/A',
                 securityLevel: 'N/A'
             };
         }
-        
+
         const isValid = /^192\.168\.|^10\.|^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(record.ipAddress);
         const ipType = isValid ? 'internal' : 'external';
-        
+
         return {
             isValidIP: isValid,
             ipType,
@@ -402,25 +484,25 @@ export default function AdvancedAttendancePage() {
             averageHours: 0,
             onTimePercentage: 0
         };
-        
+
         attendance.forEach(record => {
             if (record.status === 'Present') stats.present++;
             if (record.status === 'Absent') stats.absent++;
             if (record.arrivalDetails?.isLate) stats.late++;
             if (record.arrivalDetails?.isEarly) stats.early++;
             if (record.isRemote) stats.remote++;
-            if (record.overtimeDetails?.overtime > 0) stats.overtime++;
-            
+            if (record.overtimeDetails?.overtime > 0) stats.overtime += record.overtimeDetails.overtime;
+
             const hours = parseFloat(record.calculated?.netHours || 0);
             stats.totalHours += hours;
         });
-        
-        stats.averageHours = attendance.length > 0 ? 
+
+        stats.averageHours = attendance.length > 0 ?
             (stats.totalHours / attendance.length).toFixed(2) : 0;
-        
-        stats.onTimePercentage = attendance.length > 0 ? 
+
+        stats.onTimePercentage = attendance.length > 0 ?
             Math.round(((stats.present - stats.late) / attendance.length) * 100) : 0;
-        
+
         setStats(stats);
     };
 
@@ -431,23 +513,23 @@ export default function AdvancedAttendancePage() {
             if (searchTerm && !record.employeeId.toLowerCase().includes(searchTerm.toLowerCase())) {
                 return false;
             }
-            
+
             // Status filter
             if (filterStatus !== 'all' && record.status !== filterStatus) {
                 return false;
             }
-            
+
             // Work mode filter
             if (filterWorkMode !== 'all') {
                 if (filterWorkMode === 'remote' && !record.isRemote) return false;
                 if (filterWorkMode === 'office' && record.isRemote) return false;
             }
-            
+
             // Shift filter
             if (filterShift !== 'all' && record.shift?.id !== filterShift) {
                 return false;
             }
-            
+
             return true;
         });
     }, [attendance, searchTerm, filterStatus, filterWorkMode, filterShift]);
@@ -455,7 +537,7 @@ export default function AdvancedAttendancePage() {
     // Get overtime summary
     const overtimeSummary = useMemo(() => {
         const summary = {};
-        
+
         filteredAttendance.forEach(record => {
             if (record.overtimeDetails?.overtime > 0) {
                 const employeeId = record.employeeId;
@@ -468,21 +550,21 @@ export default function AdvancedAttendancePage() {
                         records: []
                     };
                 }
-                
+
                 summary[employeeId].totalOvertime += record.overtimeDetails.overtime;
                 summary[employeeId].totalAmount += record.overtimeDetails.overtimeAmount;
                 summary[employeeId].days++;
                 summary[employeeId].records.push(record);
             }
         });
-        
+
         return Object.values(summary).sort((a, b) => b.totalOvertime - a.totalOvertime);
     }, [filteredAttendance]);
 
     // Get late arrivals summary
     const lateArrivalsSummary = useMemo(() => {
         const summary = {};
-        
+
         filteredAttendance.forEach(record => {
             if (record.arrivalDetails?.isLate) {
                 const employeeId = record.employeeId;
@@ -495,22 +577,22 @@ export default function AdvancedAttendancePage() {
                         records: []
                     };
                 }
-                
+
                 summary[employeeId].totalLateMinutes += record.arrivalDetails.lateMinutes;
                 summary[employeeId].lateDays++;
-                summary[employeeId].averageLate = 
+                summary[employeeId].averageLate =
                     summary[employeeId].totalLateMinutes / summary[employeeId].lateDays;
                 summary[employeeId].records.push(record);
             }
         });
-        
+
         return Object.values(summary).sort((a, b) => b.totalLateMinutes - a.totalLateMinutes);
     }, [filteredAttendance]);
 
     // Get remote work summary
     const remoteWorkSummary = useMemo(() => {
         const summary = {};
-        
+
         filteredAttendance.forEach(record => {
             if (record.isRemote) {
                 const employeeId = record.employeeId;
@@ -523,7 +605,7 @@ export default function AdvancedAttendancePage() {
                         records: []
                     };
                 }
-                
+
                 summary[employeeId].remoteDays++;
                 if (record.workMode?.verified) {
                     summary[employeeId].approvedDays++;
@@ -533,7 +615,7 @@ export default function AdvancedAttendancePage() {
                 summary[employeeId].records.push(record);
             }
         });
-        
+
         return Object.values(summary).sort((a, b) => b.remoteDays - a.remoteDays);
     }, [filteredAttendance]);
 
@@ -549,7 +631,18 @@ export default function AdvancedAttendancePage() {
                     });
                 },
                 (error) => {
-                    console.error('Geolocation error:', error);
+                    console.warn('Geolocation access denied or failed. Switching to fallback mode.', error);
+                    // Fallback for development/testing if allowed
+                    if (process.env.NODE_ENV === 'development') {
+                        console.log('Using mock location for development');
+                        setCurrentLocation({
+                            lat: 40.7128,
+                            lng: -74.0060,
+                            accuracy: 10
+                        });
+                    } else {
+                        alert("Unable to retrieve location. Please allow location access for Geo-fencing.");
+                    }
                 },
                 { enableHighAccuracy: true, timeout: 10000 }
             );
@@ -564,13 +657,13 @@ export default function AdvancedAttendancePage() {
             if (geoFenceEnabled && deviceType === 'mobile') {
                 location = await getCurrentLocation();
             }
-            
+
             // Get IP address if IP restriction enabled
             let ipInfo = null;
             if (ipRestrictionEnabled && deviceType === 'web') {
                 ipInfo = await getIPInfo();
             }
-            
+
             const checkInData = {
                 deviceType,
                 timestamp: new Date().toISOString(),
@@ -578,15 +671,15 @@ export default function AdvancedAttendancePage() {
                 ipInfo: ipInfo || undefined,
                 workMode: await determineCurrentWorkMode(location)
             };
-            
+
             // Call check-in API
             if (hrmsService.checkIn) {
                 await hrmsService.checkIn(checkInData);
             }
-            
+
             alert(`Successfully checked in via ${deviceType}`);
             fetchAttendanceData(); // Refresh data
-            
+
         } catch (error) {
             console.error('Check-in failed:', error);
             alert(`Check-in failed: ${error.message}`);
@@ -609,22 +702,32 @@ export default function AdvancedAttendancePage() {
     // Helper functions
     const calculateDistance = (lat1, lon1, lat2, lon2) => {
         const R = 6371e3; // Earth's radius in meters
-        const φ1 = lat1 * Math.PI/180;
-        const φ2 = lat2 * Math.PI/180;
-        const Δφ = (lat2-lat1) * Math.PI/180;
-        const Δλ = (lon2-lon1) * Math.PI/180;
-        
-        const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-                Math.cos(φ1) * Math.cos(φ2) *
-                Math.sin(Δλ/2) * Math.sin(Δλ/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        
+        const φ1 = lat1 * Math.PI / 180;
+        const φ2 = lat2 * Math.PI / 180;
+        const Δφ = (lat2 - lat1) * Math.PI / 180;
+        const Δλ = (lon2 - lon1) * Math.PI / 180;
+
+        const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+            Math.cos(φ1) * Math.cos(φ2) *
+            Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
         return R * c; // Distance in meters
     };
 
     const calculateWeeklyHours = (employeeId) => {
-        // Implementation
-        return 0;
+        const today = new Date();
+        const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay() + 1)); // Monday
+        startOfWeek.setHours(0, 0, 0, 0);
+
+        return attendance
+            .filter(r => {
+                const rDate = new Date(r.date);
+                return r.employeeId === employeeId &&
+                    rDate >= startOfWeek &&
+                    r.calculated?.netHours;
+            })
+            .reduce((sum, r) => sum + parseFloat(r.calculated.netHours), 0);
     };
 
     const getShiftForEmployee = (employeeId) => {
@@ -633,7 +736,7 @@ export default function AdvancedAttendancePage() {
     };
 
     const isWithinShiftHours = (record, shift) => {
-        // Implementation
+        // Implementationnnnnnnnnnnnnnnnnnnnnnnnn
         return true;
     };
 
@@ -751,7 +854,7 @@ export default function AdvancedAttendancePage() {
                 hourlyRate: 32
             }
         ];
-        
+
         setAttendance(processAttendanceData(demoAttendance));
         loadShiftsData();
         loadRostersData();
@@ -763,7 +866,7 @@ export default function AdvancedAttendancePage() {
                 reject(new Error('Geolocation not supported'));
                 return;
             }
-            
+
             navigator.geolocation.getCurrentPosition(
                 (position) => {
                     resolve({
@@ -795,14 +898,14 @@ export default function AdvancedAttendancePage() {
 
     const determineCurrentWorkMode = async (location) => {
         if (!location) return 'office';
-        
+
         const distance = calculateDistance(
             location.lat,
             location.lng,
             geoFenceRules.officeLocation.lat,
             geoFenceRules.officeLocation.lng
         );
-        
+
         return distance <= geoFenceRules.radius ? 'office' : 'remote';
     };
 
@@ -835,7 +938,7 @@ export default function AdvancedAttendancePage() {
                     <Button variant="outline" size="sm" onClick={fetchAttendanceData}>
                         <RefreshCw className="mr-2 h-4 w-4" /> Refresh
                     </Button>
-                    <DropdownMenu>
+                    <DropdownMenu modal={false}>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" size="sm">
                                 <Download className="mr-2 h-4 w-4" /> Export
@@ -865,7 +968,7 @@ export default function AdvancedAttendancePage() {
                         <Progress value={stats.onTimePercentage} className="mt-2" />
                     </CardContent>
                 </Card>
-                
+
                 <Card className="col-span-1">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium">Late Arrivals</CardTitle>
@@ -875,7 +978,7 @@ export default function AdvancedAttendancePage() {
                         <p className="text-xs text-muted-foreground">Today</p>
                     </CardContent>
                 </Card>
-                
+
                 <Card className="col-span-1">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium">Remote Work</CardTitle>
@@ -885,17 +988,17 @@ export default function AdvancedAttendancePage() {
                         <p className="text-xs text-muted-foreground">Employees working remotely</p>
                     </CardContent>
                 </Card>
-                
+
                 <Card className="col-span-1">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium">Overtime Hours</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-purple-600">{stats.overtime}</div>
-                        <p className="text-xs text-muted-foreground">Total overtime instances</p>
+                        <div className="text-2xl font-bold text-purple-600">{stats.overtime.toFixed(2)}h</div>
+                        <p className="text-xs text-muted-foreground">Total overtime hours</p>
                     </CardContent>
                 </Card>
-                
+
                 <Card className="col-span-1">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium">Avg. Hours</CardTitle>
@@ -905,7 +1008,7 @@ export default function AdvancedAttendancePage() {
                         <p className="text-xs text-muted-foreground">Per employee</p>
                     </CardContent>
                 </Card>
-                
+
                 <Card className="col-span-1">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium">Geo Compliance</CardTitle>
@@ -915,7 +1018,7 @@ export default function AdvancedAttendancePage() {
                         <p className="text-xs text-muted-foreground">Within geo-fence</p>
                     </CardContent>
                 </Card>
-                
+
                 <Card className="col-span-1">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium">IP Security</CardTitle>
@@ -947,7 +1050,7 @@ export default function AdvancedAttendancePage() {
                         </div>
                     </CardContent>
                 </Card>
-                
+
                 <Card>
                     <CardHeader>
                         <CardTitle className="text-sm font-medium flex items-center">
@@ -966,7 +1069,7 @@ export default function AdvancedAttendancePage() {
                         </div>
                     </CardContent>
                 </Card>
-                
+
                 <Card>
                     <CardHeader>
                         <CardTitle className="text-sm font-medium flex items-center">
@@ -1023,8 +1126,8 @@ export default function AdvancedAttendancePage() {
                                 <div className="flex items-center gap-4">
                                     <div className="relative w-[250px]">
                                         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                                        <Input 
-                                            placeholder="Search employee..." 
+                                        <Input
+                                            placeholder="Search employee..."
                                             className="pl-9"
                                             value={searchTerm}
                                             onChange={(e) => setSearchTerm(e.target.value)}
@@ -1158,11 +1261,11 @@ export default function AdvancedAttendancePage() {
                                                         </Badge>
                                                     </TableCell>
                                                     <TableCell>
-                                                        <Badge 
+                                                        <Badge
                                                             variant={
-                                                                record.status === 'Present' ? 'default' : 
-                                                                record.status === 'Absent' ? 'destructive' : 
-                                                                'secondary'
+                                                                record.status === 'Present' ? 'default' :
+                                                                    record.status === 'Absent' ? 'destructive' :
+                                                                        'secondary'
                                                             }
                                                             className="text-xs"
                                                         >
@@ -1170,27 +1273,43 @@ export default function AdvancedAttendancePage() {
                                                         </Badge>
                                                     </TableCell>
                                                     <TableCell className="text-right">
-                                                        <DropdownMenu>
+                                                        <DropdownMenu modal={false}>
                                                             <DropdownMenuTrigger asChild>
                                                                 <Button variant="ghost" size="sm">
                                                                     <MoreVertical className="h-4 w-4" />
                                                                 </Button>
                                                             </DropdownMenuTrigger>
                                                             <DropdownMenuContent align="end">
-                                                                <DropdownMenuItem>
+                                                                <DropdownMenuItem onSelect={(e) => {
+                                                                    e.preventDefault();
+                                                                    setTimeout(() => handleViewClick(record), 100);
+                                                                }}>
                                                                     <Eye className="mr-2 h-4 w-4" />
                                                                     View Details
                                                                 </DropdownMenuItem>
-                                                                <DropdownMenuItem>
+                                                                <DropdownMenuItem onSelect={(e) => {
+                                                                    e.preventDefault();
+                                                                    setTimeout(() => handleEditClick(record), 100);
+                                                                }}>
                                                                     <Edit className="mr-2 h-4 w-4" />
                                                                     Edit Record
                                                                 </DropdownMenuItem>
-                                                                <DropdownMenuSeparator />
                                                                 <DropdownMenuItem>
+                                                                    <FileDown className="mr-2 h-4 w-4" />
+                                                                    Download Slip
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuSeparator />
+                                                                <DropdownMenuItem onSelect={(e) => {
+                                                                    e.preventDefault();
+                                                                    setTimeout(() => handleEditClick(record), 100);
+                                                                }}>
                                                                     <Clock className="mr-2 h-4 w-4" />
                                                                     Adjust Hours
                                                                 </DropdownMenuItem>
-                                                                <DropdownMenuItem>
+                                                                <DropdownMenuItem onSelect={(e) => {
+                                                                    e.preventDefault();
+                                                                    setTimeout(() => handleEditClick(record), 100);
+                                                                }}>
                                                                     <Calculator className="mr-2 h-4 w-4" />
                                                                     Calculate Overtime
                                                                 </DropdownMenuItem>
@@ -1228,7 +1347,7 @@ export default function AdvancedAttendancePage() {
                                             <p className="text-xs text-muted-foreground">This period</p>
                                         </CardContent>
                                     </Card>
-                                    
+
                                     <Card>
                                         <CardHeader className="pb-2">
                                             <CardTitle className="text-sm font-medium">Overtime Cost</CardTitle>
@@ -1240,7 +1359,7 @@ export default function AdvancedAttendancePage() {
                                             <p className="text-xs text-muted-foreground">Additional payroll</p>
                                         </CardContent>
                                     </Card>
-                                    
+
                                     <Card>
                                         <CardHeader className="pb-2">
                                             <CardTitle className="text-sm font-medium">Employees with Overtime</CardTitle>
@@ -1251,7 +1370,7 @@ export default function AdvancedAttendancePage() {
                                         </CardContent>
                                     </Card>
                                 </div>
-                                
+
                                 <div className="rounded-md border">
                                     <Table>
                                         <TableHeader>
@@ -1317,16 +1436,16 @@ export default function AdvancedAttendancePage() {
                                                 <p className="text-xs text-muted-foreground">
                                                     Avg: {summary.averageLate.toFixed(1)}m late
                                                 </p>
-                                                <Progress 
-                                                    value={Math.min((summary.totalLateMinutes / 500) * 100, 100)} 
-                                                    className="mt-2" 
+                                                <Progress
+                                                    value={Math.min((summary.totalLateMinutes / 500) * 100, 100)}
+                                                    className="mt-2"
                                                     indicatorClassName="bg-amber-500"
                                                 />
                                             </CardContent>
                                         </Card>
                                     ))}
                                 </div>
-                                
+
                                 <div className="rounded-md border">
                                     <Table>
                                         <TableHeader>
@@ -1400,7 +1519,7 @@ export default function AdvancedAttendancePage() {
                                         </Card>
                                     ))}
                                 </div>
-                                
+
                                 <div className="rounded-md border">
                                     <Table>
                                         <TableHeader>
@@ -1430,12 +1549,12 @@ export default function AdvancedAttendancePage() {
                                                     </TableCell>
                                                     <TableCell>
                                                         <div className="flex items-center">
-                                                            <Progress 
-                                                                value={(summary.approvedDays / summary.remoteDays) * 100} 
+                                                            <Progress
+                                                                value={(summary.approvedDays / summary.remoteDays) * 100}
                                                                 className="w-24"
                                                             />
                                                             <span className="ml-2 text-xs">
-                                                                {summary.remoteDays > 0 ? 
+                                                                {summary.remoteDays > 0 ?
                                                                     Math.round((summary.approvedDays / summary.remoteDays) * 100) : 0}%
                                                             </span>
                                                         </div>
@@ -1477,7 +1596,7 @@ export default function AdvancedAttendancePage() {
                                 </div>
                             </CardContent>
                         </Card>
-                        
+
                         <Card>
                             <CardHeader>
                                 <CardTitle>Work Mode Distribution</CardTitle>
@@ -1543,7 +1662,7 @@ export default function AdvancedAttendancePage() {
                                 ))}
                             </div>
                         </div>
-                        
+
                         <div className="space-y-4">
                             <h3 className="font-semibold">Overtime Rules</h3>
                             <div className="space-y-3">
@@ -1568,7 +1687,7 @@ export default function AdvancedAttendancePage() {
                                 ))}
                             </div>
                         </div>
-                        
+
                         <div className="space-y-4">
                             <h3 className="font-semibold flex items-center">
                                 <Map className="mr-2 h-4 w-4" /> Geo-fencing Rules
@@ -1613,6 +1732,239 @@ export default function AdvancedAttendancePage() {
                     </div>
                 </CardContent>
             </Card>
-        </div>
+
+            {/* Edit Dialog */}
+            <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+                <DialogContent className="sm:max-w-[500px]">
+                    <DialogHeader>
+                        <DialogTitle>Edit Attendance Record</DialogTitle>
+                        <DialogDescription>
+                            Manually update attendance timings. Total hours will be recalculated automatically.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="checkIn">Check In Time</Label>
+                                <Input
+                                    id="checkIn"
+                                    type="time"
+                                    value={editForm.checkIn}
+                                    onChange={(e) => setEditForm({ ...editForm, checkIn: e.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="checkOut">Check Out Time</Label>
+                                <Input
+                                    id="checkOut"
+                                    type="time"
+                                    value={editForm.checkOut}
+                                    onChange={(e) => setEditForm({ ...editForm, checkOut: e.target.value })}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="status">Status</Label>
+                            <Select
+                                value={editForm.status}
+                                onValueChange={(value) => setEditForm({ ...editForm, status: value })}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Present">Present</SelectItem>
+                                    <SelectItem value="Absent">Absent</SelectItem>
+                                    <SelectItem value="Half Day">Half Day</SelectItem>
+                                    <SelectItem value="Late">Late</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                                <Label htmlFor="adjustment">Manual Adjustment (Hours)</Label>
+                                <span className="text-xs text-muted-foreground">e.g. 0.5 or -1.0</span>
+                            </div>
+                            <Input
+                                id="adjustment"
+                                type="number"
+                                step="0.5"
+                                value={editForm.adjustmentHours}
+                                onChange={(e) => setEditForm({ ...editForm, adjustmentHours: e.target.value })}
+                            />
+                        </div>
+
+                        {editForm.adjustmentHours !== 0 && (
+                            <div className="space-y-2">
+                                <Label htmlFor="reason">Adjustment Reason</Label>
+                                <Input
+                                    id="reason"
+                                    placeholder="Why the adjustment?"
+                                    value={editForm.adjustmentReason}
+                                    onChange={(e) => setEditForm({ ...editForm, adjustmentReason: e.target.value })}
+                                />
+                            </div>
+                        )}
+
+                        <div className="space-y-2">
+                            <Label htmlFor="notes">Notes</Label>
+                            <Textarea
+                                id="notes"
+                                placeholder="Additional comments..."
+                                value={editForm.notes}
+                                onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                            />
+                        </div>
+
+                        {(editForm.checkIn && editForm.checkOut) && (
+                            <Alert className="bg-muted">
+                                <Calculator className="h-4 w-4" />
+                                <AlertDescription className="ml-2">
+                                    Recalculated Hours: <strong>{previewHours}h</strong>
+                                    {parseFloat(editForm.adjustmentHours) !== 0 && (
+                                        <span className="text-xs ml-2 text-muted-foreground">
+                                            (Includes {editForm.adjustmentHours}h adjustment)
+                                        </span>
+                                    )}
+                                </AlertDescription>
+                            </Alert>
+                        )}
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsEditOpen(false)}>Cancel</Button>
+                        <Button onClick={handleUpdateAttendance}>Save Changes</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog >
+
+            {/* View Details Sheet */}
+            < Sheet open={isViewOpen} onOpenChange={setIsViewOpen} >
+                <SheetContent side="right" className="w-[400px] sm:w-[540px] overflow-y-auto">
+                    <SheetHeader className="mb-6">
+                        <SheetTitle>Attendance Details</SheetTitle>
+                        <SheetDescription>
+                            Complete timeline and metadata for this record.
+                        </SheetDescription>
+                    </SheetHeader>
+
+                    {selectedRecord && (
+                        <div className="space-y-6">
+                            {/* Header Info */}
+                            <div className="flex items-start justify-between pb-4 border-b">
+                                <div>
+                                    <h3 className="font-semibold text-lg">{selectedRecord.employeeName}</h3>
+                                    <p className="text-sm text-muted-foreground">{selectedRecord.employeeId}</p>
+                                </div>
+                                <div className="text-right">
+                                    <Badge
+                                        variant={selectedRecord.status === 'Present' ? 'default' : 'secondary'}
+                                        className="mb-1"
+                                    >
+                                        {selectedRecord.status}
+                                    </Badge>
+                                    <p className="text-sm">{new Date(selectedRecord.date).toLocaleDateString()}</p>
+                                </div>
+                            </div>
+
+                            {/* Time Card */}
+                            <Card className="bg-muted/50">
+                                <CardContent className="p-4 grid grid-cols-2 gap-4 text-center">
+                                    <div>
+                                        <div className="text-sm text-muted-foreground mb-1">Check In</div>
+                                        <div className="font-mono text-xl font-semibold">
+                                            {selectedRecord.checkIn || '--:--'}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div className="text-sm text-muted-foreground mb-1">Check Out</div>
+                                        <div className="font-mono text-xl font-semibold">
+                                            {selectedRecord.checkOut || '--:--'}
+                                        </div>
+                                    </div>
+                                    <div className="col-span-2 pt-2 border-t flex justify-around">
+                                        <div>
+                                            <div className="text-xs text-muted-foreground">Total</div>
+                                            <div className="font-semibold">{selectedRecord.hours}h</div>
+                                        </div>
+                                        <div>
+                                            <div className="text-xs text-muted-foreground">Net</div>
+                                            <div className="font-semibold">{selectedRecord.calculated?.netHours}h</div>
+                                        </div>
+                                        <div>
+                                            <div className="text-xs text-muted-foreground">Break</div>
+                                            <div className="font-semibold">{selectedRecord.calculated?.breakHours}h</div>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            {/* Compliance Info */}
+                            <div>
+                                <h4 className="text-sm font-medium mb-3 flex items-center">
+                                    <Shield className="mr-2 h-4 w-4" /> Compliance & Security
+                                </h4>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="border rounded-md p-3">
+                                        <div className="text-xs text-muted-foreground mb-1">IP Address</div>
+                                        <div className="flex items-center gap-2">
+                                            <Wifi className="h-3 w-3" />
+                                            <span className="font-mono text-sm">{selectedRecord.ipAddress || 'N/A'}</span>
+                                        </div>
+                                        <Badge variant="outline" className="mt-2 text-[10px] h-5">
+                                            {selectedRecord.ipValidation?.ipType || 'Unknown'}
+                                        </Badge>
+                                    </div>
+                                    <div className="border rounded-md p-3">
+                                        <div className="text-xs text-muted-foreground mb-1">Location</div>
+                                        <div className="flex items-center gap-2">
+                                            <MapPin className="h-3 w-3" />
+                                            <span className="text-sm truncate">
+                                                {selectedRecord.locationVerified ? 'Verified' : 'Unverified'}
+                                            </span>
+                                        </div>
+                                        {selectedRecord.coordinates && (
+                                            <div className="text-[10px] text-muted-foreground mt-1 font-mono">
+                                                {selectedRecord.coordinates.lat.toFixed(4)}, {selectedRecord.coordinates.lng.toFixed(4)}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Overtime & Adjustments */}
+                            {(selectedRecord.overtimeDetails?.overtime > 0 || selectedRecord.notes) && (
+                                <div>
+                                    <h4 className="text-sm font-medium mb-3">Additional Info</h4>
+                                    <div className="space-y-3">
+                                        {selectedRecord.overtimeDetails?.overtime > 0 && (
+                                            <Alert className="bg-purple-50 border-purple-200">
+                                                <Zap className="h-4 w-4 text-purple-600" />
+                                                <AlertDescription className="text-purple-800">
+                                                    Overtime: <strong>{selectedRecord.overtimeDetails.overtime}h</strong> ({selectedRecord.overtimeDetails.overtimeType})
+                                                </AlertDescription>
+                                            </Alert>
+                                        )}
+                                        {selectedRecord.notes && (
+                                            <div className="border rounded-md p-3 bg-muted/30">
+                                                <div className="text-xs text-muted-foreground mb-1">Notes</div>
+                                                <p className="text-sm italic">"{selectedRecord.notes}"</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="pt-4 border-t">
+                                <Button className="w-full" onClick={() => { setIsViewOpen(false); handleEditClick(selectedRecord); }}>
+                                    <Edit className="mr-2 h-4 w-4" /> Edit This Record
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+                </SheetContent>
+            </Sheet >
+        </div >
     );
 }
