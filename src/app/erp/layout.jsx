@@ -5,12 +5,13 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
 import { ERPLayout } from '@/components/erp/ERPLayout';
 export default function Layout({ children }) {
-    const { isAuthenticated } = useAuthStore();
+    const { isAuthenticated, checkAuth } = useAuthStore();
     const router = useRouter();
     const [mounted, setMounted] = useState(false);
     useEffect(() => {
         setMounted(true);
-    }, []);
+        checkAuth(); // Refresh user data on mount
+    }, [checkAuth]);
     useEffect(() => {
         if (mounted && !isAuthenticated) {
             router.push('/login');

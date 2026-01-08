@@ -216,24 +216,77 @@ const mockUsers = {
 export const useAuthStore = create()(persist((set, get) => ({
     user: null,
     isAuthenticated: false,
-    login: (role) => {
-        const userData = mockUsers[role];
-        const permissions = rolePermissions[role];
-        set({
-            user: { ...userData, permissions },
-            isAuthenticated: true,
-        });
+    token: null,
+    isLoading: false,
+    error: null,
+
+    login: async (email, password) => {
+        set({ isLoading: true, error: null });
+        try {
+            const response = await fetch('http://localhost:5050/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password }),
+            });
+
+            const data = await response.json();
+
+            if (!data.success) {
+                throw new Error(data.message || 'Login failed');
+            }
+
+            set({
+                user: data.user,
+                token: data.token,
+                isAuthenticated: true,
+                isLoading: false,
+            });
+            return data.user;
+        } catch (error) {
+            set({ error: error.message, isLoading: false });
+            throw error;
+        }
     },
+
     logout: () => {
-        set({ user: null, isAuthenticated: false });
+        set({ user: null, token: null, isAuthenticated: false });
     },
+
+    checkAuth: async () => {
+        const { token } = get();
+        if (!token) return;
+
+        try {
+            const response = await fetch('http://localhost:5050/api/auth/me', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                set({ user: data.user, isAuthenticated: true });
+            } else {
+                get().logout();
+            }
+        } catch {
+            get().logout();
+        }
+    },
+
     hasPermission: (permission) => {
         const { user } = get();
-        return user?.permissions.includes(permission) ?? false;
+        if (!user) return false;
+        // Admin always has all permissions
+        if (user.role === 'admin') return true;
+        return user.permissions?.includes(permission) ?? false;
     },
+
     hasAnyPermission: (permissions) => {
         const { user } = get();
-        return permissions.some(p => user?.permissions.includes(p)) ?? false;
+        if (!user) return false;
+        if (user.role === 'admin') return true;
+        return permissions.some(p => user.permissions?.includes(p)) ?? false;
     },
 }), {
     name: 'erp-auth-storage',

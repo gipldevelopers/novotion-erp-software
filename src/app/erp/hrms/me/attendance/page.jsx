@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { hrmsService } from '@/services/hrmsService';
 import { useHRMSRole } from '@/hooks/useHRMSRole';
+import { EmployeeProfileGuard } from '@/components/hrms/EmployeeProfileGuard';
 import { AttendanceCalendar } from '@/components/hrms/AttendanceCalendar';
 import { HRMSStats } from '@/components/hrms/HRMSStats';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,11 +28,11 @@ export default function MyAttendancePage() {
     });
 
     useEffect(() => {
-        if (!employeeId) {
-            router.push('/erp/hrms/dashboard');
-            return;
+        if (employeeId) {
+            loadAttendance();
+        } else {
+            setLoading(false);
         }
-        loadAttendance();
     }, [employeeId, currentMonth, currentYear]);
 
     const loadAttendance = async () => {
@@ -93,115 +94,117 @@ export default function MyAttendancePage() {
     }
 
     return (
-        <div className="p-8 space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">My Attendance</h1>
-                    <p className="text-muted-foreground mt-1">
-                        Track your attendance and working hours
-                    </p>
+        <EmployeeProfileGuard>
+            <div className="p-8 space-y-6">
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight">My Attendance</h1>
+                        <p className="text-muted-foreground mt-1">
+                            Track your attendance and working hours
+                        </p>
+                    </div>
+                    <Button variant="outline" onClick={handleExport}>
+                        <Download className="h-4 w-4 mr-2" />
+                        Export
+                    </Button>
                 </div>
-                <Button variant="outline" onClick={handleExport}>
-                    <Download className="h-4 w-4 mr-2" />
-                    Export
-                </Button>
-            </div>
 
-            {/* Stats Cards */}
-            <div className="grid gap-4 md:grid-cols-4">
-                <HRMSStats
-                    title="Present Days"
-                    value={stats.present}
-                    subtitle="This month"
-                    icon={Calendar}
-                    trend="up"
-                    trendValue={`${Math.round((stats.present / (stats.present + stats.absent + stats.leave)) * 100) || 0}%`}
-                />
-                <HRMSStats
-                    title="Absent Days"
-                    value={stats.absent}
-                    subtitle="This month"
-                    icon={Calendar}
-                />
-                <HRMSStats
-                    title="Leave Days"
-                    value={stats.leave}
-                    subtitle="This month"
-                    icon={Calendar}
-                />
-                <HRMSStats
-                    title="Total Hours"
-                    value={stats.totalHours.toFixed(1)}
-                    subtitle="Hours worked"
-                    icon={Clock}
-                />
-            </div>
+                {/* Stats Cards */}
+                <div className="grid gap-4 md:grid-cols-4">
+                    <HRMSStats
+                        title="Present Days"
+                        value={stats.present}
+                        subtitle="This month"
+                        icon={Calendar}
+                        trend="up"
+                        trendValue={`${Math.round((stats.present / (stats.present + stats.absent + stats.leave)) * 100) || 0}%`}
+                    />
+                    <HRMSStats
+                        title="Absent Days"
+                        value={stats.absent}
+                        subtitle="This month"
+                        icon={Calendar}
+                    />
+                    <HRMSStats
+                        title="Leave Days"
+                        value={stats.leave}
+                        subtitle="This month"
+                        icon={Calendar}
+                    />
+                    <HRMSStats
+                        title="Total Hours"
+                        value={stats.totalHours.toFixed(1)}
+                        subtitle="Hours worked"
+                        icon={Clock}
+                    />
+                </div>
 
-            {/* Calendar View */}
-            <AttendanceCalendar
-                attendanceData={attendanceData}
-                month={currentMonth}
-                year={currentYear}
-                onMonthChange={handleMonthChange}
-            />
+                {/* Calendar View */}
+                <AttendanceCalendar
+                    attendanceData={attendanceData}
+                    month={currentMonth}
+                    year={currentYear}
+                    onMonthChange={handleMonthChange}
+                />
 
-            {/* Recent Attendance Table */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Recent Attendance Records</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Date</TableHead>
-                                <TableHead>Check In</TableHead>
-                                <TableHead>Check Out</TableHead>
-                                <TableHead>Hours</TableHead>
-                                <TableHead>Work Mode</TableHead>
-                                <TableHead>Status</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {attendanceData.length === 0 ? (
+                {/* Recent Attendance Table */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Recent Attendance Records</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <Table>
+                            <TableHeader>
                                 <TableRow>
-                                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                                        No attendance records for this month
-                                    </TableCell>
+                                    <TableHead>Date</TableHead>
+                                    <TableHead>Check In</TableHead>
+                                    <TableHead>Check Out</TableHead>
+                                    <TableHead>Hours</TableHead>
+                                    <TableHead>Work Mode</TableHead>
+                                    <TableHead>Status</TableHead>
                                 </TableRow>
-                            ) : (
-                                attendanceData.slice(0, 10).map((record) => (
-                                    <TableRow key={record.id}>
-                                        <TableCell className="font-medium">
-                                            {new Date(record.date).toLocaleDateString()}
-                                        </TableCell>
-                                        <TableCell>{record.checkIn || '-'}</TableCell>
-                                        <TableCell>{record.checkOut || '-'}</TableCell>
-                                        <TableCell>{record.hours || 0}h</TableCell>
-                                        <TableCell>
-                                            <Badge variant="outline" className="capitalize">
-                                                {record.workMode || 'office'}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge
-                                                variant={
-                                                    record.status === 'Present' ? 'default' :
-                                                        record.status === 'Absent' ? 'destructive' :
-                                                            'secondary'
-                                                }
-                                            >
-                                                {record.status}
-                                            </Badge>
+                            </TableHeader>
+                            <TableBody>
+                                {attendanceData.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                                            No attendance records for this month
                                         </TableCell>
                                     </TableRow>
-                                ))
-                            )}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
-        </div>
+                                ) : (
+                                    attendanceData.slice(0, 10).map((record) => (
+                                        <TableRow key={record.id}>
+                                            <TableCell className="font-medium">
+                                                {new Date(record.date).toLocaleDateString()}
+                                            </TableCell>
+                                            <TableCell>{record.checkIn || '-'}</TableCell>
+                                            <TableCell>{record.checkOut || '-'}</TableCell>
+                                            <TableCell>{record.hours || 0}h</TableCell>
+                                            <TableCell>
+                                                <Badge variant="outline" className="capitalize">
+                                                    {record.workMode || 'office'}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge
+                                                    variant={
+                                                        record.status === 'Present' ? 'default' :
+                                                            record.status === 'Absent' ? 'destructive' :
+                                                                'secondary'
+                                                    }
+                                                >
+                                                    {record.status}
+                                                </Badge>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
+            </div>
+        </EmployeeProfileGuard>
     );
 }

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Calculator, FileText, CreditCard, BookOpen, Receipt, PieChart, Users, UserPlus, Contact, Briefcase, Calendar, Wallet, ShoppingCart, ReceiptText, Settings, Shield, Lock, ChevronDown, ChevronLeft, ChevronRight, LogOut, X, Activity, ListTodo, MessageSquare, LayoutGrid, Clock, DollarSign, TrendingUp, Package, Building2, Repeat, FileCheck, Landmark, UserCheck, BarChart3, FileSpreadsheet, Coins, ArrowRightLeft } from 'lucide-react';
+import { LayoutDashboard, Calculator, FileText, CreditCard, BookOpen, Receipt, PieChart, Users, User, UserPlus, Contact, Briefcase, Calendar, Wallet, ShoppingCart, ReceiptText, Settings, Shield, Lock, ChevronDown, ChevronLeft, ChevronRight, LogOut, X, Activity, ListTodo, MessageSquare, LayoutGrid, Clock, DollarSign, TrendingUp, Package, Building2, Repeat, FileCheck, Landmark, UserCheck, BarChart3, FileSpreadsheet, Coins, ArrowRightLeft, Link as LinkIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/authStore';
 import { useSidebarStore } from '@/stores/sidebarStore';
@@ -36,6 +36,7 @@ const getNavigation = (user) => {
           { title: 'My Leaves', href: '/erp/hrms/me/leaves', icon: Calendar, permission: 'leaves.view' },
           { title: 'My Payslips', href: '/erp/hrms/me/payslips', icon: DollarSign, permission: 'payroll.view' },
           { title: 'My Performance', href: '/erp/hrms/me/performance', icon: TrendingUp, permission: 'performance.view' },
+          { title: 'My Profile', href: '/erp/profile', icon: User, permission: 'dashboard.view' },
         ],
       },
     ];
@@ -128,8 +129,8 @@ const getNavigation = (user) => {
       permission: 'admin.view',
       children: [
         { title: 'Users', href: '/erp/admin/users', icon: Users, permission: 'users.view' },
-        { title: 'Roles', href: '/erp/admin/roles', icon: Shield, permission: 'roles.view' },
-        { title: 'Permissions', href: '/erp/admin/permissions', icon: Lock, permission: 'permissions.view' },
+        { title: 'Employee Linking', href: '/erp/admin/employee-linking', icon: LinkIcon, permission: 'admin.view' },
+        { title: 'Roles & Permissions', href: '/erp/admin/roles', icon: Shield, permission: 'roles.view' },
         { title: 'Settings', href: '/erp/admin/settings', icon: Settings, permission: 'settings.view' },
       ],
     },
@@ -239,24 +240,28 @@ export const Sidebar = () => {
       <div className="p-4 border-t border-sidebar-border">
         {collapsed ? (<Tooltip delayDuration={0}>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon" onClick={logout} className="w-10 h-10 mx-auto text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
-              <LogOut className="h-4 w-4" />
-            </Button>
+            <Link href="/erp/profile" className="block">
+              <Button variant="ghost" size="icon" className="w-10 h-10 mx-auto text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+                <User className="h-4 w-4" />
+              </Button>
+            </Link>
           </TooltipTrigger>
           <TooltipContent side="right">
             <p>{user?.name}</p>
             <p className="text-xs text-muted-foreground">{user?.role}</p>
           </TooltipContent>
         </Tooltip>) : (<div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-sidebar-primary flex items-center justify-center text-sidebar-primary-foreground font-medium">
-            {user?.name?.charAt(0) || 'U'}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-sidebar-accent-foreground truncate">
-              {user?.name}
-            </p>
-            <p className="text-xs text-sidebar-foreground capitalize">{user?.role}</p>
-          </div>
+          <Link href="/erp/profile" className="flex items-center gap-3 flex-1 min-w-0 group">
+            <div className="h-10 w-10 rounded-full bg-sidebar-primary flex items-center justify-center text-sidebar-primary-foreground font-medium group-hover:ring-2 ring-primary/20 transition-all">
+              {user?.name?.charAt(0) || 'U'}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-sidebar-accent-foreground truncate group-hover:text-primary transition-colors">
+                {user?.name}
+              </p>
+              <p className="text-xs text-sidebar-foreground capitalize">{user?.role}</p>
+            </div>
+          </Link>
           <Button variant="ghost" size="icon" onClick={logout} className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
             <LogOut className="h-4 w-4" />
           </Button>

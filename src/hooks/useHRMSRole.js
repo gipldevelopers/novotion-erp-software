@@ -8,7 +8,16 @@ export function useHRMSRole() {
     const user = useAuthStore((state) => state.user);
 
     // Get employee ID from user data
-    const employeeId = user?.employeeId || null;
+    const employeeId = user?.employeeId || user?.employee?.id || null;
+
+    // Debug logging
+    if (typeof window !== 'undefined') {
+        console.log('🔍 useHRMSRole Debug:', {
+            user,
+            employeeId,
+            hasEmployeeId: !!employeeId
+        });
+    }
 
     // Determine if user is a manager (can manage team)
     const isManager = user?.isManager || user?.roles?.includes('manager') || user?.role === 'manager' || user?.role === 'hr';
@@ -23,9 +32,9 @@ export function useHRMSRole() {
      * Get the default HRMS route based on user role
      */
     const getDefaultRoute = () => {
-        if (isHRAdmin) return '/erp/hrms/dashboard';
-        if (isManager) return '/erp/hrms/manager/dashboard';
-        if (isEmployee) return '/erp/hrms/me/dashboard';
+        // Everyone goes to their personal dashboard by default
+        // Only admins without employee profiles go to the admin dashboard
+        if (isEmployee || isManager || isHRAdmin) return '/erp/hrms/me/dashboard';
         return '/erp/hrms/dashboard';
     };
 

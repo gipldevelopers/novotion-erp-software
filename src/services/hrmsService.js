@@ -133,7 +133,32 @@ class HRMSService {
         return db.employees.find((e) => e.id === id) || null;
     }
 
+    _getToken() {
+        if (!this._isBrowser()) return null;
+        const storage = window.localStorage.getItem('erp-auth-storage');
+        if (!storage) return null;
+        try {
+            const parsed = JSON.parse(storage);
+            return parsed.state?.token;
+        } catch {
+            return null;
+        }
+    }
+
     async getDashboardMetrics() {
+        const token = this._getToken();
+        if (token) {
+            try {
+                const response = await fetch('http://localhost:5050/api/hrms/dashboard/metrics', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                if (data.success) return data.metrics;
+            } catch (error) {
+                console.error('API Dash fetch failed, falling back to mock', error);
+            }
+        }
+
         await delay(300);
         const db = this._requireDb();
 
@@ -191,6 +216,18 @@ class HRMSService {
     }
 
     async getEmployees() {
+        const token = this._getToken();
+        if (token) {
+            try {
+                const response = await fetch('http://localhost:5050/api/hrms/employees', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                if (data.success) return data.employees;
+            } catch (error) {
+                console.error('API Employees fetch failed, falling back to mock', error);
+            }
+        }
         await delay(250);
         const db = this._requireDb();
         return [...db.employees];
